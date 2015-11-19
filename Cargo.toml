@@ -1,0 +1,23 @@
+[package]
+name = "migrate"
+version = "0.1.0"
+authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
+license = "MIT"
+readme = "README.md"
+description = "Create and parse JWT."
+homepage = "https://github.com/Keats/rust-migrate"
+repository = "https://github.com/Keats/rust-migrate"
+keywords = ["database", "postgres", "migration", "sql"]
+
+[dependencies]
+regex = "0.1"
+clap = "1.5.2"
+itertools = "0.4"
+clippy = {version = "0.0.22", optional = true}
+
+[dev-dependencies]
+tempdir = "0.3.4"
+
+[features]
+default = []
+dev = ["clippy"]
