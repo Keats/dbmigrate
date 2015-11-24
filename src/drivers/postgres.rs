@@ -2,6 +2,7 @@ use postgres::{self, SslMode};
 
 use super::Driver;
 use errors::{MigrateResult};
+use files::{MigrationFile, Direction};
 
 
 #[derive(Debug)]
@@ -14,11 +15,13 @@ impl Driver for Postgres {
 
     fn new(url: &str) -> MigrateResult<Self::DriverStruct> {
         let conn = try!(postgres::Connection::connect(url, &SslMode::None));
+        let pg = Postgres{ conn: conn };
+        pg.ensure_migration_table_exists();
 
-        Ok(Postgres{ conn: conn })
+        Ok(pg)
     }
 
-    fn create_version_table(&self) {
+    fn ensure_migration_table_exists(&self) {
         self.conn.batch_execute("
             CREATE TABLE IF NOT EXISTS migrations_table(id INTEGER, current INTEGER);
             INSERT INTO migrations_table (id, current)
@@ -27,7 +30,11 @@ impl Driver for Postgres {
         ").unwrap();
     }
 
-    fn get_current_version(&self) -> i32 {
+    fn remove_migration_table(&self) {
+        self.conn.execute("DROP TABLE migrations_table;", &[]).unwrap();
+    }
+
+    fn get_current_number(&self) -> i32 {
         let stmt = self.conn.prepare("
             SELECT current FROM migrations_table WHERE id = 1
         ").unwrap();
@@ -37,12 +44,32 @@ impl Driver for Postgres {
 
         current_number
     }
+
+    fn set_current_number(&self, number: i32) {
+        let stmt = self.conn.prepare(
+            "UPDATE migrations_table SET current = $1 WHERE id = 1;"
+        ).unwrap();
+        stmt.execute(&[&number]).unwrap();
+    }
+
+    fn migrate(&self, migration: MigrationFile) {
+        self.conn.batch_execute(&migration.content.unwrap()).unwrap();
+        // If we are migrating up, we can use the migration number otherwise
+        // we do number - 1 to represent we are removing it
+        let number = if migration.direction == Direction::Up {
+            migration.number
+        } else {
+            migration.number - 1
+        };
+        self.set_current_number(number);
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{Postgres};
     use drivers::Driver;
+    use files::{MigrationFile, Direction};
 
     #[test]
     fn test_can_connect_to_test_db() {
@@ -59,9 +86,40 @@ mod tests {
     #[test]
     fn test_should_create_the_table_only_once() {
         let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
-        pg.create_version_table();
-        assert_eq!(pg.get_current_version(), 0);
-        pg.create_version_table();
-        assert_eq!(pg.get_current_version(), 0);
+        // TODO: remove that hack
+        pg.set_current_number(0);
+        assert_eq!(pg.get_current_number(), 0);
+        pg.ensure_migration_table_exists();
+        assert_eq!(pg.get_current_number(), 0);
+    }
+
+    #[test]
+    fn test_should_update_current_migration_after_migrating_up() {
+        let mig = MigrationFile{
+            content: Some("CREATE TABLE IF NOT EXISTS blob();".to_owned()),
+            number: 42,
+            direction: Direction::Up,
+            filename: "".to_owned(),
+            name: "".to_owned(),
+        };
+        let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
+        pg.migrate(mig);
+        assert_eq!(pg.get_current_number(), 42);
+    }
+
+    #[test]
+    fn test_should_update_current_migration_after_migrating_down() {
+        let mig = MigrationFile{
+            content: Some("DROP TABLE blob;".to_owned()),
+            number: 42,
+            direction: Direction::Down,
+            filename: "".to_owned(),
+            name: "".to_owned(),
+        };
+        let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
+        pg.migrate(mig);
+        assert_eq!(pg.get_current_number(), 41);
+        // Flaky
+        pg.remove_migration_table();
     }
 }

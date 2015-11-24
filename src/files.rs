@@ -9,24 +9,24 @@ use errors::{LibError, MigrateResult};
 
 
 #[derive(Debug, PartialEq)]
-enum Direction {
+pub enum Direction {
     Up,
     Down
 }
 
 
 #[derive(Debug)]
-struct MigrationFile {
-    content: Option<String>,
-    filename: String,
-    number: u8,
-    name: String,
-    direction: Direction
+pub struct MigrationFile {
+    pub content: Option<String>,
+    pub direction: Direction,
+    pub number: i32,
+    pub filename: String,
+    pub name: String
 }
 
 impl MigrationFile {
     /// Used when getting the info, therefore setting content to None at that point
-    fn new(filename: &str, name: &str, number: u8, direction: Direction) -> MigrationFile {
+    fn new(filename: &str, name: &str, number: i32, direction: Direction) -> MigrationFile {
         MigrationFile {
             content: None,
             filename: filename.to_owned(),
@@ -46,8 +46,8 @@ pub struct Migration {
 
 /// Read the path given and read all the migration files, pairing them by migration
 /// number and checking for errors along the way
-pub fn read_migrations_files(path: &Path) -> MigrateResult<BTreeMap<u8, Migration>> {
-    let mut btreemap: BTreeMap<u8, Migration> = BTreeMap::new();
+pub fn read_migrations_files(path: &Path) -> MigrateResult<BTreeMap<i32, Migration>> {
+    let mut btreemap: BTreeMap<i32, Migration> = BTreeMap::new();
 
     for entry in fs::read_dir(path).unwrap() {
         let entry = entry.unwrap();
@@ -99,7 +99,7 @@ fn parse_filename(filename: &str) -> MigrateResult<MigrationFile> {
     };
 
     // Unwrapping below should be safe (in theory)
-    let number = caps.name("number").unwrap().parse::<u8>().unwrap();
+    let number = caps.name("number").unwrap().parse::<i32>().unwrap();
     let name = caps.name("name").unwrap();
     let direction = if caps.name("direction").unwrap() == "up" {
         Direction::Up
