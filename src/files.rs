@@ -5,7 +5,7 @@ use std::path::Path;
 use std::collections::{BTreeMap};
 
 use regex::Regex;
-use errors::LibError;
+use errors::{LibError, MigrateResult};
 
 
 #[derive(Debug, PartialEq)]
@@ -46,7 +46,7 @@ pub struct Migration {
 
 /// Read the path given and read all the migration files, pairing them by migration
 /// number and checking for errors along the way
-pub fn read_migrations_files(path: &Path) -> Result<BTreeMap<u8, Migration>, LibError> {
+pub fn read_migrations_files(path: &Path) -> MigrateResult<BTreeMap<u8, Migration>> {
     let mut btreemap: BTreeMap<u8, Migration> = BTreeMap::new();
 
     for entry in fs::read_dir(path).unwrap() {
@@ -88,7 +88,7 @@ pub fn read_migrations_files(path: &Path) -> Result<BTreeMap<u8, Migration>, Lib
 
 /// Gets a filename and check whether it's a valid format.
 /// If it is, grabs all the info from it
-fn parse_filename(filename: &str) -> Result<MigrationFile, LibError> {
+fn parse_filename(filename: &str) -> MigrateResult<MigrationFile> {
     let re = Regex::new(
         r"^(?P<number>[0-9]{4})_(?P<name>[_0-9a-zA-Z]*)\.(?P<direction>up|down)\.sql$"
     ).unwrap();

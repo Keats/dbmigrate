@@ -12,7 +12,7 @@ keywords = ["database", "postgres", "migration", "sql"]
 [dependencies]
 regex = "0.1"
 clap = "1.5.2"
-itertools = "0.4"
+postgres = "0.10"
 clippy = {version = "0.0.22", optional = true}
 
 [dev-dependencies]
