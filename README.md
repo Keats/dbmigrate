@@ -1,4 +1,4 @@
-# migrate
+# dbmigrate
 
 A tool to create and manage PostgreSQL migrations.
 
@@ -17,7 +17,7 @@ migrate --url postgres://.. --path ./migrations goto 0001
 migrate --url postgres://.. --path ./migrations status
 ```
 
-Format of the migration file
+Format of the migration files
 ```bash
 0001_initial_db.up.sql
 0001_initial_db.down.sql

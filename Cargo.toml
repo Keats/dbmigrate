@@ -1,5 +1,5 @@
 [package]
-name = "migrate"
+name = "dbmigrate"
 version = "0.1.0"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT"

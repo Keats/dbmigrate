@@ -84,16 +84,6 @@ mod tests {
     }
 
     #[test]
-    fn test_should_create_the_table_only_once() {
-        let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
-        // TODO: remove that hack
-        pg.set_current_number(0);
-        assert_eq!(pg.get_current_number(), 0);
-        pg.ensure_migration_table_exists();
-        assert_eq!(pg.get_current_number(), 0);
-    }
-
-    #[test]
     fn test_should_update_current_migration_after_migrating_up() {
         let mig = MigrationFile{
             content: Some("CREATE TABLE IF NOT EXISTS blob();".to_owned()),
@@ -110,7 +100,7 @@ mod tests {
     #[test]
     fn test_should_update_current_migration_after_migrating_down() {
         let mig = MigrationFile{
-            content: Some("DROP TABLE blob;".to_owned()),
+            content: Some("DROP TABLE IF EXISTS blob;".to_owned()),
             number: 42,
             direction: Direction::Down,
             filename: "".to_owned(),
@@ -119,7 +109,5 @@ mod tests {
         let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
         pg.migrate(mig);
         assert_eq!(pg.get_current_number(), 41);
-        // Flaky
-        pg.remove_migration_table();
     }
 }
