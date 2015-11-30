@@ -14,11 +14,15 @@ extern crate regex;
 extern crate postgres;
 
 use std::process::exit;
+use std::path::Path;
 use std::env;
 
 mod files;
 mod drivers;
 mod errors;
+mod cmd;
+
+
 
 fn main() {
     let matches = clap_app!(myapp =>
@@ -43,7 +47,7 @@ Using arguments will override the environment variables.
             (about: "Apply all non-applied migrations")
         )
         (@subcommand rollback =>
-            (about: "Rollback the current migration to the previous one")
+            (about: "Rollback the current migration")
         )
         (@subcommand status =>
             (about: "See list of migrations and which ones are applied")
@@ -61,26 +65,37 @@ Using arguments will override the environment variables.
             if env::var("DBMIGRATE_URL").is_ok() {
                 env::var("DBMIGRATE_URL").unwrap()
             } else {
-                println!("Couldn't find a database url.");
-                println!("Run migrate --help for more information.");
-                exit(1);
+                errors::no_database_url().exit();
             }
         }
     };
 
-    let path = match matches.value_of("path") {
+    let path_value = match matches.value_of("path") {
         Some(path) => path.to_owned(),
         None => {
             if env::var("DBMIGRATE_PATH").is_ok() {
                 env::var("DBMIGRATE_PATH").unwrap()
             } else {
-                println!("Couldn't find a migration path.");
-                println!("Run migrate --help for more information.");
-                exit(1);
+                errors::no_migration_path().exit();
             }
         }
     };
 
-    println!("Value for url: {}", url);
-    println!("Value for path: {}", path);
+    let path = Path::new(&path_value);
+
+    let migration_files = match files::read_migrations_files(path) {
+        Ok(files) => files,
+        Err(e) => e.exit()
+    };
+
+    match matches.subcommand_name() {
+        // Some("status") => cmd::status(&url, path),
+        Some("create") => {
+            // Should be safe unwraps
+            let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
+            cmd::create(&url, migration_files, path, slug)
+        },
+        None        => println!("No subcommand was used"),
+        _           => println!("Some other subcommand was used"),
+    }
 }

@@ -1,12 +1,12 @@
 ///! Driver interface and implementations
 use errors::{MigrateResult};
 use files::{MigrationFile};
+use drivers::pg::Postgres;
 
 
+// That approach doesn't work as it doesn't seem possible to return
+// a generic implementing a specific trait
 pub trait Driver {
-    type DriverStruct;
-    // TODO: the whole thing with the custom type looks a bit ugly
-    fn new(url: &str) -> MigrateResult<Self::DriverStruct>;
     fn ensure_migration_table_exists(&self);
     fn remove_migration_table(&self);
     fn get_current_number(&self) -> i32;
@@ -14,5 +14,5 @@ pub trait Driver {
     fn migrate(&self, migration: MigrationFile);
 }
 
-
-mod postgres;
+// so we only care about pg
+pub mod pg;

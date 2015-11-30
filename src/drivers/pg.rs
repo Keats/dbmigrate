@@ -6,21 +6,21 @@ use files::{MigrationFile, Direction};
 
 
 #[derive(Debug)]
-struct Postgres {
+pub struct Postgres {
     conn: postgres::Connection
 }
 
-impl Driver for Postgres {
-    type DriverStruct = Postgres;
-
-    fn new(url: &str) -> MigrateResult<Self::DriverStruct> {
+impl Postgres {
+    pub fn new(url: &str) -> MigrateResult<Postgres> {
         let conn = try!(postgres::Connection::connect(url, &SslMode::None));
         let pg = Postgres{ conn: conn };
         pg.ensure_migration_table_exists();
 
         Ok(pg)
     }
+}
 
+impl Driver for Postgres {
     fn ensure_migration_table_exists(&self) {
         self.conn.batch_execute("
             CREATE TABLE IF NOT EXISTS migrations_table(id INTEGER, current INTEGER);
@@ -95,6 +95,7 @@ mod tests {
         let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
         pg.migrate(mig);
         assert_eq!(pg.get_current_number(), 42);
+        pg.set_current_number(0);
     }
 
     #[test]
@@ -109,5 +110,6 @@ mod tests {
         let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
         pg.migrate(mig);
         assert_eq!(pg.get_current_number(), 41);
+        pg.set_current_number(0);
     }
 }
