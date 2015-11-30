@@ -48,8 +48,8 @@ impl MigrationFile {
 
 #[derive(Debug)]
 pub struct Migration {
-    up: Option<MigrationFile>,
-    down: Option<MigrationFile>
+    pub up: Option<MigrationFile>,
+    pub down: Option<MigrationFile>
 }
 
 /// Creates 2 migration file: one up and one down
@@ -57,7 +57,9 @@ pub fn create_migration(path: &Path, slug: &str, number: i32) -> MigrateResult<(
     let filename_up = get_filename(slug, number, Direction::Up);
     let filename_down = get_filename(slug, number, Direction::Down);
 
+    println!("Creating {}", filename_up);
     try!(File::create(path.join(filename_up)));
+    println!("Creating {}", filename_down);
     try!(File::create(path.join(filename_down)));
 
     Ok(())

@@ -12,8 +12,8 @@ extern crate tempdir;
 extern crate clap;
 extern crate regex;
 extern crate postgres;
+extern crate term;
 
-use std::process::exit;
 use std::path::Path;
 use std::env;
 
@@ -89,11 +89,11 @@ Using arguments will override the environment variables.
     };
 
     match matches.subcommand_name() {
-        // Some("status") => cmd::status(&url, path),
+        Some("status") => cmd::status(&url, &migration_files),
         Some("create") => {
             // Should be safe unwraps
             let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
-            cmd::create(&url, migration_files, path, slug)
+            cmd::create(&migration_files, path, slug)
         },
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),

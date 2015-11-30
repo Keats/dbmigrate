@@ -1,9 +1,10 @@
-use std::io;
+use std::io::{self, Write};
 use std::fmt;
 use std::error::Error;
 use std::process;
-use postgres;
 
+use postgres;
+use term;
 
 /// Library generic result type.
 pub type MigrateResult<T> = Result<T, MigrateError>;
@@ -38,16 +39,12 @@ pub struct MigrateError {
     pub error_type: MigrateErrorType
 }
 
-macro_rules! wlnerr(
-    ($($arg:tt)*) => ({
-        use std::io::{Write, stderr};
-        writeln!(&mut stderr(), $($arg)*).ok();
-    })
-);
-
 impl MigrateError {
     pub fn exit(&self) -> ! {
-        wlnerr!("{}", self.error);
+        let mut t = term::stderr().unwrap();
+        t.fg(term::color::RED).unwrap();
+        writeln!(t, "{}", self.error).ok();
+        assert!(t.reset().unwrap());
         process::exit(1);
     }
 }
