@@ -3,8 +3,9 @@ use std::fmt;
 use std::error::Error;
 use std::process;
 
+use ansi_term::Colour::Red;
+
 use postgres;
-use term;
 
 /// Library generic result type.
 pub type MigrateResult<T> = Result<T, MigrateError>;
@@ -41,10 +42,10 @@ pub struct MigrateError {
 
 impl MigrateError {
     pub fn exit(&self) -> ! {
-        let mut t = term::stderr().unwrap();
-        t.fg(term::color::RED).unwrap();
-        writeln!(t, "{}", self.error).ok();
-        assert!(t.reset().unwrap());
+        let mut stderr = io::stderr();
+        let err = self.error.clone();
+        println!("{:?}", self);
+        writeln!(&mut stderr, "{}", Red.paint(err)).ok();
         process::exit(1);
     }
 }

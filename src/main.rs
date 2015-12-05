@@ -12,7 +12,7 @@ extern crate tempdir;
 extern crate clap;
 extern crate regex;
 extern crate postgres;
-extern crate term;
+extern crate ansi_term;
 
 use std::path::Path;
 use std::env;
