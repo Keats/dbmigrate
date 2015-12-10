@@ -52,15 +52,8 @@ impl Driver for Postgres {
         stmt.execute(&[&number]).unwrap();
     }
 
-    fn migrate(&self, migration: MigrationFile) {
-        self.conn.batch_execute(&migration.content.unwrap()).unwrap();
-        // If we are migrating up, we can use the migration number otherwise
-        // we do number - 1 to represent we are removing it
-        let number = if migration.direction == Direction::Up {
-            migration.number
-        } else {
-            migration.number - 1
-        };
+    fn migrate(&self, migration: String, number: i32) {
+        self.conn.batch_execute(migration.as_str()).unwrap();
         self.set_current_number(number);
     }
 }

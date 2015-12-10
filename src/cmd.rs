@@ -28,3 +28,15 @@ pub fn status(url: &str, migration_files: &Migrations) {
     }
     println!("{:?}", current);
 }
+
+
+pub fn up(url: &str, migration_files: &Migrations) {
+    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
+    let current = pg.get_current_number();
+    for (number, migration) in migration_files.iter(){
+        if number > &current {
+            let mig_file = migration.up.as_ref().unwrap();
+            pg.migrate(mig_file.content.unwrap(), mig_file.number);
+        }
+    }
+}

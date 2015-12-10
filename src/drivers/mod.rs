@@ -11,7 +11,7 @@ pub trait Driver {
     fn remove_migration_table(&self);
     fn get_current_number(&self) -> i32;
     fn set_current_number(&self, number: i32);
-    fn migrate(&self, migration: MigrationFile);
+    fn migrate(&self, migration: String, number: i32);
 }
 
 // so we only care about pg
