@@ -36,7 +36,9 @@ pub fn up(url: &str, migration_files: &Migrations) {
     for (number, migration) in migration_files.iter(){
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
-            pg.migrate(mig_file.content.unwrap(), mig_file.number);
+            let content = mig_file.content.clone().unwrap();
+            pg.migrate(content, mig_file.number);
+            println!("Applied migration #{}: {:?}", mig_file.number, mig_file.name);
         }
     }
 }

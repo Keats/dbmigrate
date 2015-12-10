@@ -43,7 +43,7 @@ Using arguments will override the environment variables.
             (about: "Creates two migration files (up and down) with the given slug")
             (@arg slug: +required "Sets the name of the migration")
         )
-        (@subcommand sync =>
+        (@subcommand up =>
             (about: "Apply all non-applied migrations")
         )
         (@subcommand rollback =>
@@ -95,6 +95,7 @@ Using arguments will override the environment variables.
             let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
             cmd::create(&migration_files, path, slug)
         },
+        Some("up") => cmd::up(&url, &migration_files),
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),
     }

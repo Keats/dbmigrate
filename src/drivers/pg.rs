@@ -53,7 +53,7 @@ impl Driver for Postgres {
     }
 
     fn migrate(&self, migration: String, number: i32) {
-        self.conn.batch_execute(migration.as_str()).unwrap();
+        self.conn.batch_execute(&migration).unwrap();
         self.set_current_number(number);
     }
 }
@@ -86,7 +86,7 @@ mod tests {
             name: "".to_owned(),
         };
         let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
-        pg.migrate(mig);
+        pg.migrate(mig.content.unwrap(), mig.number);
         assert_eq!(pg.get_current_number(), 42);
         pg.set_current_number(0);
     }
@@ -101,7 +101,7 @@ mod tests {
             name: "".to_owned(),
         };
         let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
-        pg.migrate(mig);
+        pg.migrate(mig.content.unwrap(), mig.number - 1);
         assert_eq!(pg.get_current_number(), 41);
         pg.set_current_number(0);
     }
