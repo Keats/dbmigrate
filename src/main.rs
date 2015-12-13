@@ -41,20 +41,17 @@ Using arguments will override the environment variables.
             (about: "Creates two migration files (up and down) with the given slug")
             (@arg slug: +required "Sets the name of the migration")
         )
+        (@subcommand status =>
+            (about: "See list of migrations and which ones are applied")
+        )
         (@subcommand up =>
             (about: "Apply all non-applied migrations")
         )
         (@subcommand down =>
             (about: "Un-apply all applied migrations")
         )
-        (@subcommand rollback =>
-            (about: "Rollback the current migration")
-        )
-        (@subcommand reset =>
-            (about: "Equivalent of dbmigrate down && dbmigrate up")
-        )
-        (@subcommand status =>
-            (about: "See list of migrations and which ones are applied")
+        (@subcommand redo =>
+            (about: "Rollback the current migration and re-run it")
         )
     ).get_matches();
 
@@ -97,6 +94,7 @@ Using arguments will override the environment variables.
         },
         Some("up") => cmd::up(&url, &migration_files),
         Some("down") => cmd::down(&url, &migration_files),
+        Some("redo") => cmd::redo(&url, &migration_files),
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),
     }

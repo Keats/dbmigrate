@@ -66,3 +66,22 @@ pub fn down(url: &str, migration_files: &Migrations) {
         }
     }
 }
+
+pub fn redo(url: &str, migration_files: &Migrations) {
+    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
+    let current = pg.get_current_number();
+    let migration = migration_files.get(&current).unwrap();
+
+    let down_file = migration.down.as_ref().unwrap();
+    let up_file = migration.up.as_ref().unwrap();
+    println!("Running down migration #{}: {}", current, down_file.name);
+    match pg.migrate(down_file.content.clone().unwrap(), current - 1) {
+        Err(e) => e.exit(),
+        Ok(_) => {}
+    }
+    println!("Running migration #{}: {}", current, up_file.name);
+    match pg.migrate(up_file.content.clone().unwrap(), current) {
+        Err(e) => e.exit(),
+        Ok(_) => {}
+    }
+}
