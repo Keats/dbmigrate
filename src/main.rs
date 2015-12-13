@@ -12,7 +12,6 @@ extern crate tempdir;
 extern crate clap;
 extern crate regex;
 extern crate postgres;
-extern crate ansi_term;
 
 use std::path::Path;
 use std::env;
@@ -52,12 +51,11 @@ Using arguments will override the environment variables.
         (@subcommand rollback =>
             (about: "Rollback the current migration")
         )
+        (@subcommand reset =>
+            (about: "Equivalent of dbmigrate down && dbmigrate up")
+        )
         (@subcommand status =>
             (about: "See list of migrations and which ones are applied")
-        )
-        (@subcommand goto =>
-            (about: "Go to a specific migration, migration up/down on its way")
-            (@arg migration_number: +required "Which migration to go to")
         )
     ).get_matches();
 

@@ -3,8 +3,6 @@ use std::fmt;
 use std::error::Error;
 use std::process;
 
-use ansi_term::Colour::Red;
-
 use postgres;
 
 /// Library generic result type.
@@ -44,7 +42,7 @@ impl MigrateError {
     pub fn exit(&self) -> ! {
         let mut stderr = io::stderr();
         let err = self.error.clone();
-        writeln!(&mut stderr, "{}", Red.paint(err)).ok();
+        writeln!(&mut stderr, "{}", err).ok();
         process::exit(1);
     }
 }
