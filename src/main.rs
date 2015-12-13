@@ -22,7 +22,6 @@ mod errors;
 mod cmd;
 
 
-
 fn main() {
     let matches = clap_app!(myapp =>
         (@setting SubcommandRequiredElseHelp)

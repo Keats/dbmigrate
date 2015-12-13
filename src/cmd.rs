@@ -24,9 +24,12 @@ pub fn status(url: &str, migration_files: &Migrations) {
     let current = pg.get_current_number();
     for (number, migration) in migration_files.iter(){
         let mig_file = migration.up.as_ref().unwrap();
-        println!("{} - {}", mig_file.number, mig_file.name);
+        if number == &current {
+            println!("{} - {} (current)", mig_file.number, mig_file.name);
+        } else {
+            println!("{} - {}", mig_file.number, mig_file.name);
+        }
     }
-    println!("{:?}", current);
 }
 
 
