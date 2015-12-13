@@ -38,7 +38,23 @@ pub fn up(url: &str, migration_files: &Migrations) {
             let mig_file = migration.up.as_ref().unwrap();
             let content = mig_file.content.clone().unwrap();
             pg.migrate(content, mig_file.number);
-            println!("Applied migration #{}: {:?}", mig_file.number, mig_file.name);
+            println!("Ran migration #{}: {}", mig_file.number, mig_file.name);
         }
+    }
+}
+
+pub fn down(url: &str, migration_files: &Migrations) {
+    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
+    let current = pg.get_current_number();
+    let mut numbers: Vec<i32> = migration_files.keys().cloned().filter(|i| i <= &current).collect();
+    numbers.sort_by(|a, b| b.cmp(a));
+
+    for number in numbers {
+        let migration = migration_files.get(&number).unwrap();
+        let mig_file = migration.down.as_ref().unwrap();
+        let content = mig_file.content.clone().unwrap();
+        pg.migrate(content, mig_file.number - 1);
+        println!("Ran down migration #{}: {}", mig_file.number, mig_file.name);
+
     }
 }

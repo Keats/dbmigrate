@@ -46,6 +46,9 @@ Using arguments will override the environment variables.
         (@subcommand up =>
             (about: "Apply all non-applied migrations")
         )
+        (@subcommand down =>
+            (about: "Un-apply all applied migrations")
+        )
         (@subcommand rollback =>
             (about: "Rollback the current migration")
         )
@@ -96,6 +99,7 @@ Using arguments will override the environment variables.
             cmd::create(&migration_files, path, slug)
         },
         Some("up") => cmd::up(&url, &migration_files),
+        Some("down") => cmd::down(&url, &migration_files),
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),
     }

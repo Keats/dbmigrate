@@ -44,7 +44,6 @@ impl MigrateError {
     pub fn exit(&self) -> ! {
         let mut stderr = io::stderr();
         let err = self.error.clone();
-        println!("{:?}", self);
         writeln!(&mut stderr, "{}", Red.paint(err)).ok();
         process::exit(1);
     }

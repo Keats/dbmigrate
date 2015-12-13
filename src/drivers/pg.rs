@@ -2,7 +2,6 @@ use postgres::{self, SslMode};
 
 use super::Driver;
 use errors::{MigrateResult};
-use files::{MigrationFile, Direction};
 
 
 #[derive(Debug)]
