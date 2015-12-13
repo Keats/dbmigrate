@@ -40,8 +40,11 @@ pub fn up(url: &str, migration_files: &Migrations) {
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
             let content = mig_file.content.clone().unwrap();
-            pg.migrate(content, mig_file.number);
-            println!("Ran migration #{}: {}", mig_file.number, mig_file.name);
+            println!("Running migration #{}: {}", mig_file.number, mig_file.name);
+            match pg.migrate(content, mig_file.number) {
+                Err(e) => e.exit(),
+                Ok(_) => {}
+            }
         }
     }
 }
@@ -56,8 +59,10 @@ pub fn down(url: &str, migration_files: &Migrations) {
         let migration = migration_files.get(&number).unwrap();
         let mig_file = migration.down.as_ref().unwrap();
         let content = mig_file.content.clone().unwrap();
-        pg.migrate(content, mig_file.number - 1);
-        println!("Ran down migration #{}: {}", mig_file.number, mig_file.name);
-
+        println!("Running down migration #{}: {}", mig_file.number, mig_file.name);
+        match pg.migrate(content, mig_file.number - 1) {
+            Err(e) => e.exit(),
+            Ok(_) => {}
+        }
     }
 }

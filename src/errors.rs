@@ -80,9 +80,24 @@ macro_rules! impl_from_error {
 }
 
 impl_from_error!(io::Error, MigrateErrorType::Io);
-impl_from_error!(postgres::error::ConnectError, MigrateErrorType::PostgresConnection);
-impl_from_error!(postgres::error::Error, MigrateErrorType::PostgresError);
 
+impl From<postgres::error::Error> for MigrateError {
+    fn from(e: postgres::error::Error) -> Self {
+        MigrateError {
+            error: format!("{}", e),
+            error_type: MigrateErrorType::PostgresError
+        }
+    }
+}
+
+impl From<postgres::error::ConnectError> for MigrateError {
+    fn from(e: postgres::error::ConnectError) -> Self {
+        MigrateError {
+            error: format!("Postgres connection error.\n{}", e),
+            error_type: MigrateErrorType::PostgresConnection
+        }
+    }
+}
 
 pub fn invalid_filename(filename: &str) -> MigrateError {
     MigrateError {

@@ -51,9 +51,11 @@ impl Driver for Postgres {
         stmt.execute(&[&number]).unwrap();
     }
 
-    fn migrate(&self, migration: String, number: i32) {
-        self.conn.batch_execute(&migration).unwrap();
+    fn migrate(&self, migration: String, number: i32) -> MigrateResult<()> {
+        try!(self.conn.batch_execute(&migration));
         self.set_current_number(number);
+
+        Ok(())
     }
 }
 
