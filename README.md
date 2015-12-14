@@ -1,24 +1,38 @@
 # dbmigrate
 
-A tool to create and manage PostgreSQL migrations.
+A tool to create and manage SQL migrations.
+
+
+## Databases supported
+
+- Postgres
 
 ## Usage
 
+Every call to dbmigrate requires 2 arguments: database url and migrations folder.
+Those can be set through environment variables: DBMIGRATE_URL and DBMIGRATE_PATH.
+
 ```bash
 # create a migration file
-migrate --url postgres://.. --path ./migrations create my_name
+dbmigrate --url postgres://.. --path ./migrations create my_name
 # apply all non applied migrations
-migrate --url postgres://.. --path ./migrations up
-# rollback last migration
-migrate --url postgres://.. --path ./migrations rollback
-# go to specific migration
-migrate --url postgres://.. --path ./migrations goto 0001
+dbmigrate --url postgres://.. --path ./migrations up
+# un-apply all migrations
+dbmigrate --url postgres://.. --path ./migrations down
+# redo the last migration
+dbmigrate --url postgres://.. --path ./migrations redo
 # see list of migrations and which one is currently applied
-migrate --url postgres://.. --path ./migrations status
+dbmigrate --url postgres://.. --path ./migrations status
 ```
 
-Format of the migration files
+The format of the migration files is the following:
 ```bash
-0001_initial_db.up.sql
-0001_initial_db.down.sql
+0001.initial_db.up.sql
+0001.initial_db.down.sql
 ```
+
+## TODO
+
+- add colours to console output
+- find a way to implement generic Driver trait initializer to support other databases
+- find a way to do integration testing on travis + rust (use a python script?)
