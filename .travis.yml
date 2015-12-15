@@ -1,22 +1,18 @@
 language: rust
+sudo: false
 rust:
   - stable
   - beta
   - nightly
-
-sudo: false
+addons:
+  postgresql: "9.4"
+before_script:
+  - psql -c 'create database migrate; create user pg superuser;' -U postgres
 
 notifications:
   email: false
 
-addons:
-  postgresql: "9.4.1"
-
-services:
-  - postgresql
-
-before_script:
-  - psql -c 'create database migrate; create user pg superuser;' -U postgres
-
 env:
-  - DBMIGRATE_URL=postgres://pg@localhost:5432/migrate DBMIGRATE_PATH=migrations/
+  global:
+    - DBMIGRATE_URL=postgres://pg@localhost:5432/migrate
+    - DBMIGRATE_PATH=migrations/
