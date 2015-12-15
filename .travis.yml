@@ -7,12 +7,10 @@ rust:
 addons:
   postgresql: "9.4"
 before_script:
-  - psql -c 'create database migrate; create user pg superuser;' -U postgres
-
-notifications:
-  email: false
-
+  - psql -c 'create database migrate;' -U postgres
 env:
   global:
-    - DBMIGRATE_URL=postgres://pg@localhost:5432/migrate
+    - DBMIGRATE_URL=postgres://postgres@localhost/migrate
     - DBMIGRATE_PATH=migrations/
+notifications:
+  email: false
