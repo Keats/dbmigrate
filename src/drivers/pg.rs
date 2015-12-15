@@ -64,10 +64,11 @@ mod tests {
     use super::{Postgres};
     use drivers::Driver;
     use files::{MigrationFile, Direction};
+    use std::env;
 
     #[test]
     fn test_can_connect_to_test_db() {
-        let pg = Postgres::new("postgres://pg@localhost:5432/migrate");
+        let pg = Postgres::new(&env::var("DBMIGRATE_URL").unwrap());
         assert_eq!(pg.is_ok(), true);
     }
 
@@ -86,7 +87,7 @@ mod tests {
             filename: "".to_owned(),
             name: "".to_owned(),
         };
-        let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
+        let pg = Postgres::new(&env::var("DBMIGRATE_URL").unwrap()).unwrap();
         pg.migrate(mig.content.unwrap(), mig.number);
         assert_eq!(pg.get_current_number(), 42);
         pg.set_current_number(0);
@@ -101,7 +102,7 @@ mod tests {
             filename: "".to_owned(),
             name: "".to_owned(),
         };
-        let pg = Postgres::new("postgres://pg@localhost:5432/migrate").unwrap();
+        let pg = Postgres::new(&env::var("DBMIGRATE_URL").unwrap()).unwrap();
         pg.migrate(mig.content.unwrap(), mig.number - 1);
         assert_eq!(pg.get_current_number(), 41);
         pg.set_current_number(0);
