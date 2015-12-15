@@ -4,10 +4,6 @@ rust:
   - stable
   - beta
   - nightly
-addons:
-  postgresql: "9.4"
-before_script:
-  - psql -c 'create database migrate;' -U postgres
 env:
   global:
     - DBMIGRATE_URL=postgres://postgres@localhost/migrate
