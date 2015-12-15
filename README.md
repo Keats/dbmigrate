@@ -1,5 +1,8 @@
 # dbmigrate
 
+[![Build Status](https://travis-ci.org/Keats/dbmigrate.svg)](https://travis-ci.org/Keats/dbmigrate)
+
+
 A tool to create and manage SQL migrations.
 
 
