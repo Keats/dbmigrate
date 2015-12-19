@@ -39,9 +39,7 @@ impl Driver for Postgres {
         ").unwrap();
         let results = stmt.query(&[]).unwrap();
 
-        let current_number: i32 = results.get(0).get("current");
-
-        current_number
+        results.get(0).get("current")
     }
 
     fn set_current_number(&self, number: i32) {

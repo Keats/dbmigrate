@@ -103,7 +103,7 @@ pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
 
     // Let's check the all the files we need now
     let mut index = 1;
-    for (number, migration) in btreemap.iter() {
+    for (number, migration) in &btreemap {
         if index != *number {
             return Err(migration_skipped(index));
         }

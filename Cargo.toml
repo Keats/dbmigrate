@@ -13,7 +13,7 @@ keywords = ["database", "postgres", "migration", "sql"]
 regex = "0.1"
 clap = "1.5.2"
 postgres = "0.10"
-clippy = {version = "0.0.22", optional = true}
+clippy = {version = "0.0.31", optional = true}
 
 [dev-dependencies]
 tempdir = "0.3.4"
