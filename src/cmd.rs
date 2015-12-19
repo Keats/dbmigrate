@@ -40,7 +40,7 @@ pub fn up(url: &str, migration_files: &Migrations) {
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
             let content = mig_file.content.clone().unwrap();
-            println!("Running migration #{}: {}", mig_file.number, mig_file.name);
+            println!("Running up migration #{}: {}", mig_file.number, mig_file.name);
             match pg.migrate(content, mig_file.number) {
                 Err(e) => e.exit(),
                 Ok(_) => {}
@@ -79,7 +79,7 @@ pub fn redo(url: &str, migration_files: &Migrations) {
         Err(e) => e.exit(),
         Ok(_) => {}
     }
-    println!("Running migration #{}: {}", current, up_file.name);
+    println!("Running up migration #{}: {}", current, up_file.name);
     match pg.migrate(up_file.content.clone().unwrap(), current) {
         Err(e) => e.exit(),
         Ok(_) => {}
