@@ -6,10 +6,8 @@ use files::{create_migration, Migrations};
 
 
 pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
-    // should be safe
-    let current_number = migration_files.keys().max().unwrap();
+    let current_number = migration_files.keys().cloned().max().unwrap_or(0i32);
     let number = current_number + 1;
-
     match create_migration(path, slug, number) {
         Err(e) => e.exit(),
         Ok(_) => {
@@ -19,6 +17,8 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
 }
 
 
+// TODO: add colours to lines to ensure we can visually see which arena
+// applied and which aren't
 pub fn status(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
