@@ -37,5 +37,6 @@ The format of the migration files is the following:
 ## TODO
 
 - add colours to console output
+- time how long it takes to run each migration and print it
 - find a way to implement generic Driver trait initializer to support other databases
 - find a way to do integration testing on travis + rust (use a python script?)
