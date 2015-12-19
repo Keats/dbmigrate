@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT"
 readme = "README.md"
-description = "Create and parse JWT."
-homepage = "https://github.com/Keats/rust-migrate"
-repository = "https://github.com/Keats/rust-migrate"
+description = "CLI tool to create and run SQL migrations. Postgres only for now."
+homepage = "https://github.com/Keats/dbmigrate"
+repository = "https://github.com/Keats/dbmigrate"
 keywords = ["database", "postgres", "migration", "sql"]
 
 [dependencies]
