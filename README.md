@@ -13,7 +13,7 @@ A tool to create and manage SQL migrations.
 ## Usage
 
 Every call to dbmigrate requires 2 arguments: database url and migrations folder.
-Those can be set through environment variables: DBMIGRATE_URL and DBMIGRATE_PATH.
+Those can be set through environment variables: `DBMIGRATE_URL` and `DBMIGRATE_PATH`.
 
 ```bash
 # create a migration file
@@ -40,3 +40,6 @@ The format of the migration files is the following:
 - time how long it takes to run each migration and print it
 - find a way to implement generic Driver trait initializer to support other databases
 - find a way to do integration testing on travis + rust (use a python script?)
+
+## Acknowledgments
+This is heavily inspired by [https://github.com/mattes/migrate](https://github.com/mattes/migrate).
