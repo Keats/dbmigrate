@@ -36,6 +36,12 @@ pub fn status(url: &str, migration_files: &Migrations) {
 pub fn up(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
+    let max = migration_files.keys().max().unwrap();
+    if current == *max {
+        println!("Migrations are up-to-date");
+        return;
+    }
+
     for (number, migration) in migration_files.iter(){
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
@@ -52,6 +58,11 @@ pub fn up(url: &str, migration_files: &Migrations) {
 pub fn down(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
+    if current == 0 {
+        println!("No down migrations to run");
+        return;
+    }
+
     let mut numbers: Vec<i32> = migration_files.keys().cloned().filter(|i| i <= &current).collect();
     numbers.sort_by(|a, b| b.cmp(a));
 
@@ -70,10 +81,15 @@ pub fn down(url: &str, migration_files: &Migrations) {
 pub fn redo(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
+    if current == 0 {
+        println!("No migration to redo");
+        return;
+    }
     let migration = migration_files.get(&current).unwrap();
 
     let down_file = migration.down.as_ref().unwrap();
     let up_file = migration.up.as_ref().unwrap();
+
     println!("Running down migration #{}: {}", current, down_file.name);
     match pg.migrate(down_file.content.clone().unwrap(), current - 1) {
         Err(e) => e.exit(),

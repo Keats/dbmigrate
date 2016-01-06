@@ -12,9 +12,12 @@ extern crate tempdir;
 extern crate clap;
 extern crate regex;
 extern crate postgres;
+extern crate time;
 
 use std::path::Path;
 use std::env;
+
+use time::PreciseTime;
 
 mod files;
 mod drivers;
@@ -85,6 +88,8 @@ Using arguments will override the environment variables.
         Err(e) => e.exit()
     };
 
+    let start = PreciseTime::now();
+
     match matches.subcommand_name() {
         Some("status") => cmd::status(&url, &migration_files),
         Some("create") => {
@@ -97,5 +102,14 @@ Using arguments will override the environment variables.
         Some("redo") => cmd::redo(&url, &migration_files),
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),
+    }
+
+    let duration = start.to(PreciseTime::now());
+    let minutes = duration.num_minutes();
+    let seconds = duration.num_seconds();
+    if minutes == 0 && seconds == 0 {
+        println!("Operation took less than 1 second");
+    } else {
+        println!("Operation took {} minutes and {} seconds", minutes, seconds);
     }
 }
