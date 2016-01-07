@@ -1,1 +1,4 @@
-DROP TABLE IF EXISTS companies CASCADE;
+CREATE TABLE companies (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL
+);
