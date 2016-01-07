@@ -10,3 +10,6 @@ env:
     - DBMIGRATE_PATH=migrations/
 notifications:
   email: false
+matrix:
+  allow_failures:
+    - rust: nightly
