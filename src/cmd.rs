@@ -1,10 +1,36 @@
 use std::path::Path;
 
+use time::PreciseTime;
+
 use drivers::pg::Postgres;
 use drivers::Driver;
-use files::{create_migration, Migrations};
+use files::{create_migration, Migrations, Direction};
 use print;
 
+
+// Does the whole migration thingy, along with timing and handling errors
+macro_rules! migrate {
+    ($driver: ident, $mig_file: ident) => {
+        println!(
+            "Running {} migration #{}: {}",
+            $mig_file.direction.to_string(), $mig_file.number, $mig_file.name
+        );
+        {
+            let start = PreciseTime::now();
+
+            match $driver.migrate(
+                $mig_file.content.clone().unwrap(),
+                if $mig_file.direction == Direction::Up { $mig_file.number } else { $mig_file.number - 1}
+            ) {
+                Err(e) => e.exit(),
+                Ok(_) => {
+                    let duration = start.to(PreciseTime::now());
+                    print::success(&format!("> Done in {} second(s)", duration.num_seconds()));
+                }
+            }
+        }
+    }
+}
 
 pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
     let current_number = migration_files.keys().cloned().max().unwrap_or(0i32);
@@ -44,12 +70,7 @@ pub fn up(url: &str, migration_files: &Migrations) {
     for (number, migration) in migration_files.iter(){
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
-            let content = mig_file.content.clone().unwrap();
-            println!("Running up migration #{}: {}", mig_file.number, mig_file.name);
-            match pg.migrate(content, mig_file.number) {
-                Err(e) => e.exit(),
-                Ok(_) => {}
-            }
+            migrate!(pg, mig_file);
         }
     }
 }
@@ -68,12 +89,7 @@ pub fn down(url: &str, migration_files: &Migrations) {
     for number in numbers {
         let migration = migration_files.get(&number).unwrap();
         let mig_file = migration.down.as_ref().unwrap();
-        let content = mig_file.content.clone().unwrap();
-        println!("Running down migration #{}: {}", mig_file.number, mig_file.name);
-        match pg.migrate(content, mig_file.number - 1) {
-            Err(e) => e.exit(),
-            Ok(_) => {}
-        }
+        migrate!(pg, mig_file);
     }
 }
 
@@ -89,14 +105,6 @@ pub fn redo(url: &str, migration_files: &Migrations) {
     let down_file = migration.down.as_ref().unwrap();
     let up_file = migration.up.as_ref().unwrap();
 
-    println!("Running down migration #{}: {}", current, down_file.name);
-    match pg.migrate(down_file.content.clone().unwrap(), current - 1) {
-        Err(e) => e.exit(),
-        Ok(_) => {}
-    }
-    println!("Running up migration #{}: {}", current, up_file.name);
-    match pg.migrate(up_file.content.clone().unwrap(), current) {
-        Err(e) => e.exit(),
-        Ok(_) => {}
-    }
+    migrate!(pg, down_file);
+    migrate!(pg, up_file);
 }
