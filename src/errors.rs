@@ -4,6 +4,7 @@ use std::error::Error;
 use std::process;
 
 use postgres;
+use print;
 
 /// Library generic result type.
 pub type MigrateResult<T> = Result<T, MigrateError>;
@@ -40,9 +41,7 @@ pub struct MigrateError {
 
 impl MigrateError {
     pub fn exit(&self) -> ! {
-        let mut stderr = io::stderr();
-        let err = self.error.clone();
-        writeln!(&mut stderr, "{}", err).ok();
+        print::error(&self.error.clone());
         process::exit(1);
     }
 }

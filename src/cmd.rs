@@ -3,6 +3,7 @@ use std::path::Path;
 use drivers::pg::Postgres;
 use drivers::Driver;
 use files::{create_migration, Migrations};
+use print;
 
 
 pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
@@ -11,21 +12,19 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
     match create_migration(path, slug, number) {
         Err(e) => e.exit(),
         Ok(_) => {
-            println!("Migration files successfully created!");
+            print::success("Migration files successfully created!");
         }
     }
 }
 
 
-// TODO: add colours to lines to ensure we can visually see which arena
-// applied and which aren't
 pub fn status(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
     for (number, migration) in migration_files.iter(){
         let mig_file = migration.up.as_ref().unwrap();
         if number == &current {
-            println!("{} - {} (current)", mig_file.number, mig_file.name);
+            print::success(&format!("{} - {} (current)", mig_file.number, mig_file.name));
         } else {
             println!("{} - {}", mig_file.number, mig_file.name);
         }
@@ -38,7 +37,7 @@ pub fn up(url: &str, migration_files: &Migrations) {
     let current = pg.get_current_number();
     let max = migration_files.keys().max().unwrap();
     if current == *max {
-        println!("Migrations are up-to-date");
+        print::success("Migrations are up-to-date");
         return;
     }
 
@@ -59,7 +58,7 @@ pub fn down(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
     if current == 0 {
-        println!("No down migrations to run");
+        print::success("No down migrations to run");
         return;
     }
 
@@ -82,7 +81,7 @@ pub fn redo(url: &str, migration_files: &Migrations) {
     let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
     let current = pg.get_current_number();
     if current == 0 {
-        println!("No migration to redo");
+        print::success("No migration to redo");
         return;
     }
     let migration = migration_files.get(&current).unwrap();

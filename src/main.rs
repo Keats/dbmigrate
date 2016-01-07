@@ -13,6 +13,7 @@ extern crate clap;
 extern crate regex;
 extern crate postgres;
 extern crate time;
+extern crate term;
 
 use std::path::Path;
 use std::env;
@@ -23,6 +24,7 @@ mod files;
 mod drivers;
 mod errors;
 mod cmd;
+mod print;
 
 
 fn main() {
@@ -107,6 +109,8 @@ Using arguments will override the environment variables.
     let duration = start.to(PreciseTime::now());
     let minutes = duration.num_minutes();
     let seconds = duration.num_seconds();
+    // Spacing
+    println!("");
     if minutes == 0 && seconds == 0 {
         println!("Operation took less than 1 second");
     } else {
