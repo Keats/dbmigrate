@@ -2,7 +2,7 @@
 use errors::{MigrateResult, invalid_url};
 
 
-pub mod pg;
+mod postgres;
 
 pub trait Driver {
     fn ensure_migration_table_exists(&self);
@@ -16,7 +16,7 @@ pub trait Driver {
 /// Returns a driver instance depending on url
 pub fn get_driver(url: &str) -> MigrateResult<Box<Driver>> {
     match url.split(":").collect::<Vec<_>>()[0] {
-        "postgres" => pg::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
+        "postgres" => postgres::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
         _ => Err(invalid_url(url))
     }
 }

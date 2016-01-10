@@ -1,4 +1,4 @@
-use postgres::{self, SslMode};
+use postgres_client::{self, SslMode};
 
 use super::Driver;
 use errors::{MigrateResult};
@@ -6,12 +6,12 @@ use errors::{MigrateResult};
 
 #[derive(Debug)]
 pub struct Postgres {
-    conn: postgres::Connection
+    conn: postgres_client::Connection
 }
 
 impl Postgres {
     pub fn new(url: &str) -> MigrateResult<Postgres> {
-        let conn = try!(postgres::Connection::connect(url, &SslMode::None));
+        let conn = try!(postgres_client::Connection::connect(url, &SslMode::None));
         let pg = Postgres{ conn: conn };
         pg.ensure_migration_table_exists();
 

@@ -3,7 +3,7 @@ use std::fmt;
 use std::error::Error;
 use std::process;
 
-use postgres;
+use postgres_client;
 use print;
 
 /// Library generic result type.
@@ -82,8 +82,8 @@ macro_rules! impl_from_error {
 
 impl_from_error!(io::Error, MigrateErrorType::Io);
 
-impl From<postgres::error::Error> for MigrateError {
-    fn from(e: postgres::error::Error) -> Self {
+impl From<postgres_client::error::Error> for MigrateError {
+    fn from(e: postgres_client::error::Error) -> Self {
         MigrateError {
             error: format!("{}", e),
             error_type: MigrateErrorType::PostgresError
@@ -91,8 +91,8 @@ impl From<postgres::error::Error> for MigrateError {
     }
 }
 
-impl From<postgres::error::ConnectError> for MigrateError {
-    fn from(e: postgres::error::ConnectError) -> Self {
+impl From<postgres_client::error::ConnectError> for MigrateError {
+    fn from(e: postgres_client::error::ConnectError) -> Self {
         MigrateError {
             error: format!("Postgres connection error.\n{}", e),
             error_type: MigrateErrorType::PostgresConnection

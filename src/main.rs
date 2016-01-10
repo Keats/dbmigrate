@@ -11,7 +11,8 @@ extern crate tempdir;
 #[macro_use]
 extern crate clap;
 extern crate regex;
-extern crate postgres;
+extern crate postgres as postgres_client;
+extern crate mysql as mysql_client;
 extern crate time;
 extern crate term;
 
