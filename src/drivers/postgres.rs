@@ -11,7 +11,7 @@ pub struct Postgres {
 
 impl Postgres {
     pub fn new(url: &str) -> MigrateResult<Postgres> {
-        let conn = try!(postgres_client::Connection::connect(url, &SslMode::None));
+        let conn = try!(postgres_client::Connection::connect(url, SslMode::None));
         let pg = Postgres{ conn: conn };
         pg.ensure_migration_table_exists();
 
@@ -35,7 +35,7 @@ impl Driver for Postgres {
 
     fn get_current_number(&self) -> i32 {
         let stmt = self.conn.prepare("
-            SELECT current FROM migrations_table WHERE id = 1
+            SELECT current FROM migrations_table WHERE id = 1;
         ").unwrap();
         let results = stmt.query(&[]).unwrap();
 
