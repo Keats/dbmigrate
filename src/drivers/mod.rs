@@ -1,9 +1,9 @@
 ///! Driver interface and implementations
-use errors::{MigrateResult};
+use errors::{MigrateResult, invalid_url};
 
 
-// That approach doesn't work as it doesn't seem possible to return
-// a generic implementing a specific trait
+pub mod pg;
+
 pub trait Driver {
     fn ensure_migration_table_exists(&self);
     fn remove_migration_table(&self);
@@ -12,5 +12,12 @@ pub trait Driver {
     fn migrate(&self, migration: String, number: i32) -> MigrateResult<()>;
 }
 
-// so we only care about pg
-pub mod pg;
+
+/// Returns a driver instance depending on url
+pub fn get_driver(url: &str) -> MigrateResult<Box<Driver>> {
+    match url.split(":").collect::<Vec<_>>()[0] {
+        "postgres" => pg::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
+        _ => Err(invalid_url(url))
+    }
+}
+

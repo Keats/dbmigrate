@@ -83,8 +83,9 @@ Using arguments will override the environment variables.
         }
     };
 
-    let path = Path::new(&path_value);
+    let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
 
+    let path = Path::new(&path_value);
     let migration_files = match files::read_migrations_files(path) {
         Ok(files) => files,
         Err(e) => e.exit()
@@ -93,15 +94,15 @@ Using arguments will override the environment variables.
     let start = PreciseTime::now();
 
     match matches.subcommand_name() {
-        Some("status") => cmd::status(&url, &migration_files),
+        Some("status") => cmd::status(driver, &migration_files),
         Some("create") => {
             // Should be safe unwraps
             let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
             cmd::create(&migration_files, path, slug)
         },
-        Some("up") => cmd::up(&url, &migration_files),
-        Some("down") => cmd::down(&url, &migration_files),
-        Some("redo") => cmd::redo(&url, &migration_files),
+        Some("up") => cmd::up(driver, &migration_files),
+        Some("down") => cmd::down(driver, &migration_files),
+        Some("redo") => cmd::redo(driver, &migration_files),
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),
     }

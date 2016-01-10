@@ -12,6 +12,8 @@ pub type MigrateResult<T> = Result<T, MigrateError>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum MigrateErrorType {
+    /// Invalid URL
+    InvalidUrl,
     /// No migration directory was provided
     NoMigrationPath,
     /// No database url was provided
@@ -130,5 +132,12 @@ pub fn no_database_url() -> MigrateError {
     MigrateError {
         error: format!("No database url was provided in the environment or via a command arg."),
         error_type: MigrateErrorType::NoDatabaseUrl
+    }
+}
+
+pub fn invalid_url(url: &str) -> MigrateError {
+    MigrateError {
+        error: format!("URL provided is not supported (only postgres and mysql are supported): {}", url),
+        error_type: MigrateErrorType::InvalidUrl
     }
 }
