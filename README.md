@@ -9,6 +9,7 @@ A tool to create and manage SQL migrations.
 ## Databases supported
 
 - Postgres
+- MySQL
 
 ## Usage
 

@@ -4,6 +4,8 @@ use std::error::Error;
 use std::process;
 
 use postgres_client;
+use mysql_client;
+
 use print;
 
 /// Library generic result type.
@@ -29,7 +31,9 @@ pub enum MigrateErrorType {
     /// Couldn't connect to the PG database
     PostgresConnection,
     /// An error occured when running a SQL query in PG
-    PostgresError
+    PostgresError,
+    /// Couldn't parse or connecter to the mysql database
+    MysqlConnection
 }
 
 /// Our actual error
@@ -96,6 +100,15 @@ impl From<postgres_client::error::ConnectError> for MigrateError {
         MigrateError {
             error: format!("Postgres connection error.\n{}", e),
             error_type: MigrateErrorType::PostgresConnection
+        }
+    }
+}
+
+impl From<mysql_client::error::MyError> for MigrateError {
+    fn from(e: mysql_client::error::MyError) -> Self {
+        MigrateError {
+            error: format!("MySQL connection error.\n{}", e),
+            error_type: MigrateErrorType::MysqlConnection
         }
     }
 }
