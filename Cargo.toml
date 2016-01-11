@@ -2,7 +2,7 @@
 name = "dbmigrate"
 version = "0.1.2"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 description = "CLI tool to create and run SQL migrations. Postgres only for now."
 homepage = "https://github.com/Keats/dbmigrate"
