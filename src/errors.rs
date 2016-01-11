@@ -32,8 +32,8 @@ pub enum MigrateErrorType {
     PostgresConnection,
     /// An error occured when running a SQL query in PG
     PostgresError,
-    /// Couldn't parse or connecter to the mysql database
-    MysqlConnection
+    /// Couldn't connect to the mysql database or migration failed
+    MysqlError
 }
 
 /// Our actual error
@@ -107,8 +107,8 @@ impl From<postgres_client::error::ConnectError> for MigrateError {
 impl From<mysql_client::error::MyError> for MigrateError {
     fn from(e: mysql_client::error::MyError) -> Self {
         MigrateError {
-            error: format!("MySQL connection error.\n{}", e),
-            error_type: MigrateErrorType::MysqlConnection
+            error: format!("MySQL error.\n{}", e),
+            error_type: MigrateErrorType::MysqlError
         }
     }
 }

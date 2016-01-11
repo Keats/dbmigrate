@@ -36,12 +36,13 @@ impl Mysql {
 
 impl Driver for Mysql {
     fn ensure_migration_table_exists(&self) {
-        self.pool.prep_exec("
+        let mut conn = self.pool.get_conn().unwrap();
+        conn.query("
             CREATE TABLE IF NOT EXISTS migrations_table(id INTEGER, current INTEGER);
             INSERT INTO migrations_table (id, current)
             SELECT 1, 0 FROM DUAL
             WHERE NOT EXISTS(SELECT * FROM migrations_table WHERE id = 1);
-        ", ()).unwrap();
+        ").unwrap();
     }
 
     fn remove_migration_table(&self) {
@@ -59,13 +60,14 @@ impl Driver for Mysql {
 
     fn set_current_number(&self, number: i32) {
         self.pool.prep_exec(
-            "UPDATE migrations_table SET current = $1 WHERE id = 1;",
+            "UPDATE migrations_table SET current = ? WHERE id = 1;",
             (&number,)
         ).unwrap();
     }
 
     fn migrate(&self, migration: String, number: i32) -> MigrateResult<()> {
-        try!(self.pool.prep_exec(&migration, ()));
+        let mut conn = try!(self.pool.get_conn());
+        try!(conn.query(migration));
         self.set_current_number(number);
 
         Ok(())

@@ -45,6 +45,9 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
 
 pub fn status(driver: Box<Driver>, migration_files: &Migrations) {
     let current = driver.get_current_number();
+    if current == 0 {
+        print::success("No migration has been ran");
+    }
     for (number, migration) in migration_files.iter(){
         let mig_file = migration.up.as_ref().unwrap();
         if number == &current {
