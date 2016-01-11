@@ -3,7 +3,9 @@ use std::fmt;
 use std::error::Error;
 use std::process;
 
-use postgres;
+use postgres_client;
+use mysql_client;
+
 use print;
 
 /// Library generic result type.
@@ -12,6 +14,8 @@ pub type MigrateResult<T> = Result<T, MigrateError>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum MigrateErrorType {
+    /// Invalid URL
+    InvalidUrl,
     /// No migration directory was provided
     NoMigrationPath,
     /// No database url was provided
@@ -27,7 +31,9 @@ pub enum MigrateErrorType {
     /// Couldn't connect to the PG database
     PostgresConnection,
     /// An error occured when running a SQL query in PG
-    PostgresError
+    PostgresError,
+    /// Couldn't connect to the mysql database or migration failed
+    MysqlError
 }
 
 /// Our actual error
@@ -80,8 +86,8 @@ macro_rules! impl_from_error {
 
 impl_from_error!(io::Error, MigrateErrorType::Io);
 
-impl From<postgres::error::Error> for MigrateError {
-    fn from(e: postgres::error::Error) -> Self {
+impl From<postgres_client::error::Error> for MigrateError {
+    fn from(e: postgres_client::error::Error) -> Self {
         MigrateError {
             error: format!("{}", e),
             error_type: MigrateErrorType::PostgresError
@@ -89,11 +95,20 @@ impl From<postgres::error::Error> for MigrateError {
     }
 }
 
-impl From<postgres::error::ConnectError> for MigrateError {
-    fn from(e: postgres::error::ConnectError) -> Self {
+impl From<postgres_client::error::ConnectError> for MigrateError {
+    fn from(e: postgres_client::error::ConnectError) -> Self {
         MigrateError {
             error: format!("Postgres connection error.\n{}", e),
             error_type: MigrateErrorType::PostgresConnection
+        }
+    }
+}
+
+impl From<mysql_client::error::MyError> for MigrateError {
+    fn from(e: mysql_client::error::MyError) -> Self {
+        MigrateError {
+            error: format!("MySQL error.\n{}", e),
+            error_type: MigrateErrorType::MysqlError
         }
     }
 }
@@ -130,5 +145,12 @@ pub fn no_database_url() -> MigrateError {
     MigrateError {
         error: format!("No database url was provided in the environment or via a command arg."),
         error_type: MigrateErrorType::NoDatabaseUrl
+    }
+}
+
+pub fn invalid_url(url: &str) -> MigrateError {
+    MigrateError {
+        error: format!("URL provided is not supported (only postgres and mysql are supported): {}", url),
+        error_type: MigrateErrorType::InvalidUrl
     }
 }

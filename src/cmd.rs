@@ -2,7 +2,6 @@ use std::path::Path;
 
 use time::PreciseTime;
 
-use drivers::pg::Postgres;
 use drivers::Driver;
 use files::{create_migration, Migrations, Direction};
 use print;
@@ -44,9 +43,11 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) {
 }
 
 
-pub fn status(url: &str, migration_files: &Migrations) {
-    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
-    let current = pg.get_current_number();
+pub fn status(driver: Box<Driver>, migration_files: &Migrations) {
+    let current = driver.get_current_number();
+    if current == 0 {
+        print::success("No migration has been ran");
+    }
     for (number, migration) in migration_files.iter(){
         let mig_file = migration.up.as_ref().unwrap();
         if number == &current {
@@ -58,9 +59,8 @@ pub fn status(url: &str, migration_files: &Migrations) {
 }
 
 
-pub fn up(url: &str, migration_files: &Migrations) {
-    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
-    let current = pg.get_current_number();
+pub fn up(driver: Box<Driver>, migration_files: &Migrations) {
+    let current = driver.get_current_number();
     let max = migration_files.keys().max().unwrap();
     if current == *max {
         print::success("Migrations are up-to-date");
@@ -70,14 +70,13 @@ pub fn up(url: &str, migration_files: &Migrations) {
     for (number, migration) in migration_files.iter(){
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
-            migrate!(pg, mig_file);
+            migrate!(driver, mig_file);
         }
     }
 }
 
-pub fn down(url: &str, migration_files: &Migrations) {
-    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
-    let current = pg.get_current_number();
+pub fn down(driver: Box<Driver>, migration_files: &Migrations) {
+    let current = driver.get_current_number();
     if current == 0 {
         print::success("No down migrations to run");
         return;
@@ -89,13 +88,12 @@ pub fn down(url: &str, migration_files: &Migrations) {
     for number in numbers {
         let migration = migration_files.get(&number).unwrap();
         let mig_file = migration.down.as_ref().unwrap();
-        migrate!(pg, mig_file);
+        migrate!(driver, mig_file);
     }
 }
 
-pub fn redo(url: &str, migration_files: &Migrations) {
-    let pg = Postgres::new(url).unwrap_or_else(|e| e.exit());
-    let current = pg.get_current_number();
+pub fn redo(driver: Box<Driver>, migration_files: &Migrations) {
+    let current = driver.get_current_number();
     if current == 0 {
         print::success("No migration to redo");
         return;
@@ -105,6 +103,6 @@ pub fn redo(url: &str, migration_files: &Migrations) {
     let down_file = migration.down.as_ref().unwrap();
     let up_file = migration.up.as_ref().unwrap();
 
-    migrate!(pg, down_file);
-    migrate!(pg, up_file);
+    migrate!(driver, down_file);
+    migrate!(driver, up_file);
 }

@@ -9,11 +9,12 @@ A tool to create and manage SQL migrations.
 ## Databases supported
 
 - Postgres
+- MySQL
 
 ## Usage
 
 Every call to dbmigrate requires 2 arguments: database url and migrations folder.
-Those can be set through environment variables: `DBMIGRATE_URL` and `DBMIGRATE_PATH`.
+Those can be set through environment variables: `DBMIGRATE_URL` and `DBMIGRATE_PATH` or as args to a call. Argument will override an environment variable.
 
 ```bash
 # create a migration file
@@ -36,7 +37,6 @@ The format of the migration files is the following:
 
 ## TODO
 
-- find a way to implement generic Driver trait initializer to support other databases
 - find a way to do integration testing on travis + rust (use a python script?)
 
 ## Acknowledgments
