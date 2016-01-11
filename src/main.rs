@@ -70,19 +70,16 @@ Using arguments will override the environment variables.
         .map(|s| s.into())
         .or(env::var("DBMIGRATE_URL").ok())
         .unwrap_or_else(|| errors::no_database_url().exit());
+    let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
 
     let path_value = matches.value_of("path")
         .map(|s| s.into())
         .or(env::var("DBMIGRATE_PATH").ok())
         .unwrap_or_else(|| errors::no_migration_path().exit());
-
-    let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
-
     let path = Path::new(&path_value);
-    let migration_files = match files::read_migrations_files(path) {
-        Ok(files) => files,
-        Err(e) => e.exit()
-    };
+
+    let migration_files = files::read_migrations_files(path)
+        .unwrap_or_else(|e| e.exit());
 
     let start = PreciseTime::now();
 

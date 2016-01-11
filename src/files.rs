@@ -164,6 +164,7 @@ mod tests {
 
     #[test]
     fn test_parse_bad_filename_format() {
+        // Has _ instead of . between number and name
         let result = parse_filename("0001_tests.up.sql");
         assert_eq!(result.is_ok(), false);
     }
