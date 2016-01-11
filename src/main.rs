@@ -60,6 +60,9 @@ Using arguments will override the environment variables.
         (@subcommand redo =>
             (about: "Rollback the current migration and re-run it")
         )
+        (@subcommand revert =>
+            (about: "Revert the current migration")
+        )
     ).get_matches();
 
     // TODO: that's quite ugly, surely there's a better way
@@ -105,6 +108,7 @@ Using arguments will override the environment variables.
         Some("up") => cmd::up(driver, &migration_files),
         Some("down") => cmd::down(driver, &migration_files),
         Some("redo") => cmd::redo(driver, &migration_files),
+        Some("revert") => cmd::revert(driver, &migration_files),
         None        => println!("No subcommand was used"),
         _           => println!("Some other subcommand was used"),
     }

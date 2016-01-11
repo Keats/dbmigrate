@@ -25,6 +25,8 @@ dbmigrate --url postgres://.. --path ./migrations up
 dbmigrate --url postgres://.. --path ./migrations down
 # redo the last migration
 dbmigrate --url postgres://.. --path ./migrations redo
+# revert the last migration
+dbmigrate --url postgres://.. --path ./migrations revert
 # see list of migrations and which one is currently applied
 dbmigrate --url postgres://.. --path ./migrations status
 ```

@@ -106,3 +106,16 @@ pub fn redo(driver: Box<Driver>, migration_files: &Migrations) {
     migrate!(driver, down_file);
     migrate!(driver, up_file);
 }
+
+
+pub fn revert(driver: Box<Driver>, migration_files: &Migrations) {
+    let current = driver.get_current_number();
+    if current == 0 {
+        print::success("No migration to revert");
+        return;
+    }
+    let migration = migration_files.get(&current).unwrap();
+    let down_file = migration.down.as_ref().unwrap();
+
+    migrate!(driver, down_file);
+}
