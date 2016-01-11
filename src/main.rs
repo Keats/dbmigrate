@@ -65,28 +65,16 @@ Using arguments will override the environment variables.
         )
     ).get_matches();
 
-    // TODO: that's quite ugly, surely there's a better way
-    let url = match matches.value_of("url") {
-        Some(url) => url.to_owned(),
-        None => {
-            if env::var("DBMIGRATE_URL").is_ok() {
-                env::var("DBMIGRATE_URL").unwrap()
-            } else {
-                errors::no_database_url().exit();
-            }
-        }
-    };
 
-    let path_value = match matches.value_of("path") {
-        Some(path) => path.to_owned(),
-        None => {
-            if env::var("DBMIGRATE_PATH").is_ok() {
-                env::var("DBMIGRATE_PATH").unwrap()
-            } else {
-                errors::no_migration_path().exit();
-            }
-        }
-    };
+    let url = matches.value_of("url")
+        .map(|s| s.into())
+        .or(env::var("DBMIGRATE_URL").ok())
+        .unwrap_or_else(|| errors::no_database_url().exit());
+
+    let path_value = matches.value_of("path")
+        .map(|s| s.into())
+        .or(env::var("DBMIGRATE_PATH").ok())
+        .unwrap_or_else(|| errors::no_migration_path().exit());
 
     let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
 
