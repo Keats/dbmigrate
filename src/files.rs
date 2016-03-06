@@ -67,6 +67,7 @@ pub fn create_migration(path: &Path, slug: &str, number: i32) -> MigrateResult<(
 
 /// Get the filename to use for a migration using the given data
 fn get_filename(slug: &str, number: i32, direction: Direction) -> String {
+    let slug = &slugify(slug);
     let num = number.to_string();
     let filler = repeat("0").take(4 - num.len()).collect::<String>();
     let candidate =
@@ -141,9 +142,16 @@ fn parse_filename(filename: &str) -> MigrateResult<MigrationFile> {
     Ok(MigrationFile::new(filename, name, number, direction))
 }
 
+fn slugify(s: &str) -> String {
+    let invalid = Regex::new(r"_*[^_0-9a-zA-Z]+_*").unwrap();
+    invalid.replace_all(s, "_")
+}
+
+
 #[cfg(test)]
 mod tests {
-    use super::{parse_filename, read_migrations_files, Direction, get_filename};
+    use super::{parse_filename, read_migrations_files, Direction, get_filename,
+        slugify};
     use tempdir::TempDir;
     use std::path::{PathBuf};
     use std::io::prelude::*;
@@ -173,14 +181,8 @@ mod tests {
 
     #[test]
     fn test_get_filename_ok() {
-        let result = get_filename("initial", 1, Direction::Up);
-        assert_eq!(result, "0001.initial.up.sql");
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_get_filename_refuses_bad_name() {
-        get_filename("an invalid name", 1, Direction::Up);
+        let result = get_filename("initial migr", 1, Direction::Up);
+        assert_eq!(result, "0001.initial_migr.up.sql");
     }
 
     #[test]
@@ -216,5 +218,10 @@ mod tests {
         let migrations = read_migrations_files(pathbuf.as_path());
 
         assert_eq!(migrations.is_err(), true);
+    }
+
+    #[test]
+    fn test_slugify() {
+        assert_eq!(slugify("a   bZ_-9.@"), "a_bZ_9_".to_string());
     }
 }
