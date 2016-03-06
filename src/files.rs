@@ -143,7 +143,7 @@ fn parse_filename(filename: &str) -> MigrateResult<MigrationFile> {
 }
 
 fn slugify(s: &str) -> String {
-    let invalid = Regex::new(r"_*[^_0-9a-zA-Z]+_*").unwrap();
+    let invalid = Regex::new(r"_*[ ]+_*").unwrap();
     invalid.replace_all(s, "_")
 }
 
@@ -186,6 +186,12 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_get_filename_refuses_bad_name() {
+        get_filename("an #@# invalid-name", 1, Direction::Up);
+    }
+
+    #[test]
     fn test_parse_good_migrations_directory() {
         let pathbuf = TempDir::new("migrations").unwrap().into_path();
         create_file(&pathbuf, "0001.tests.up.sql");
@@ -222,6 +228,6 @@ mod tests {
 
     #[test]
     fn test_slugify() {
-        assert_eq!(slugify("a   bZ_-9.@"), "a_bZ_9_".to_string());
+        assert_eq!(slugify("a   bZ_-9.@"), "a_bZ_-9.@".to_string());
     }
 }
