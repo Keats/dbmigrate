@@ -69,7 +69,9 @@ pub fn create_migration(path: &Path, slug: &str, number: i32) -> MigrateResult<(
 fn get_filename(slug: &str, number: i32, direction: Direction) -> String {
     let num = number.to_string();
     let filler = repeat("0").take(4 - num.len()).collect::<String>();
-    filler + &num + "." + slug + "." + &direction.to_string() + ".sql"
+    let candidate =
+        filler + &num + "." + slug + "." + &direction.to_string() + ".sql";
+    parse_filename(&candidate).unwrap().filename
 }
 
 pub type Migrations = BTreeMap<i32, Migration>;
@@ -173,6 +175,12 @@ mod tests {
     fn test_get_filename_ok() {
         let result = get_filename("initial", 1, Direction::Up);
         assert_eq!(result, "0001.initial.up.sql");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_filename_refuses_bad_name() {
+        get_filename("an invalid name", 1, Direction::Up);
     }
 
     #[test]
