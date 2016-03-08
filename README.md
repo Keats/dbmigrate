@@ -52,6 +52,10 @@ dbmigrate --url postgres://.. --path ./migrations create "change currency table"
 ## TODO
 
 - find a way to do integration testing on travis + rust (use a python script?)
+- move to gitlab?
+
+## Changelog
+0.2.2: slugify migration names and check if they are ok
 
 ## Acknowledgments
 This is heavily inspired by [https://github.com/mattes/migrate](https://github.com/mattes/migrate).
