@@ -3,7 +3,7 @@ create:
 		-e 'POSTGRES_USER=pg' \
 		-e 'POSTGRES_DB=migrate' \
 		-p 5777:5432 \
-		-d postgres:9.4.4
+		-d postgres:9.5.0
 
 		docker run --name migrate-mysql \
 		-e 'MYSQL_DATABASE=migrate' \

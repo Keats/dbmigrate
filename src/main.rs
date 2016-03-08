@@ -46,7 +46,7 @@ Using arguments will override the environment variables.
         (@arg path: -p --path +takes_value "Sets the folder containing the migrations")
         (@subcommand create =>
             (about: "Creates two migration files (up and down) with the given slug")
-            (@arg slug: +required "Sets the name of the migration")
+            (@arg slug: +required "Sets the name of the migration. `.` (dot) is not allowed in the name")
         )
         (@subcommand status =>
             (about: "See list of migrations and which ones are applied")

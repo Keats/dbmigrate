@@ -37,6 +37,18 @@ The format of the migration files is the following:
 0001.initial_db.down.sql
 ```
 
+You can also pass a tring to `create` and dbmigrate will slugify it for you:
+
+```bash
+dbmigrate --url postgres://.. --path ./migrations create "change currency table"
+
+# gives the following files
+0001.change_currency_table.up.sql
+0001.change_currency_table.down.sql
+```
+
+`.` (dot) is not allowed in a migration name as it is the filename separator character.
+
 ## TODO
 
 - find a way to do integration testing on travis + rust (use a python script?)

@@ -14,12 +14,12 @@ regex = "0.1"
 url = "0.5"
 postgres = "0.11"
 mysql = "1.2"
-clippy = {version = "0.0.37", optional = true}
+clippy = {version = "~0.0.48", optional = true}
 time = "0.1"
 term = "0.2"
 
 [dependencies.clap]
-version = "2"
+version = "2.0"
 default-features = false
 features = [ "suggestions", "color" , "unstable"]
 

@@ -54,8 +54,11 @@ pub struct Migration {
 
 /// Creates 2 migration file: one up and one down
 pub fn create_migration(path: &Path, slug: &str, number: i32) -> MigrateResult<()> {
-    let filename_up = get_filename(slug, number, Direction::Up);
-    let filename_down = get_filename(slug, number, Direction::Down);
+    let fixed_slug = slug.replace(" ", "_");
+    let filename_up = get_filename(&fixed_slug, number, Direction::Up);
+    try!(parse_filename(&filename_up));
+    let filename_down = get_filename(&fixed_slug, number, Direction::Down);
+    try!(parse_filename(&filename_down));
 
     println!("Creating {}", filename_up);
     try!(File::create(path.join(filename_up)));
