@@ -76,7 +76,7 @@ macro_rules! impl_from_error {
         impl From<$f> for MigrateError {
             fn from(e: $f) -> Self {
                 MigrateError {
-                    error: format!("{}", e.description()),
+                    error: e.description().to_owned(),
                     error_type: $e
                 }
             }
@@ -136,14 +136,14 @@ pub fn missing_file(number: i32) -> MigrateError {
 
 pub fn no_migration_path() -> MigrateError {
     MigrateError {
-        error: format!("No migration path was provided in the environment or via a command arg."),
+        error: "No migration path was provided in the environment or via a command arg.".to_owned(),
         error_type: MigrateErrorType::NoMigrationPath
     }
 }
 
 pub fn no_database_url() -> MigrateError {
     MigrateError {
-        error: format!("No database url was provided in the environment or via a command arg."),
+        error: "No database url was provided in the environment or via a command arg.".to_owned(),
         error_type: MigrateErrorType::NoDatabaseUrl
     }
 }
