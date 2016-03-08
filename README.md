@@ -37,7 +37,7 @@ The format of the migration files is the following:
 0001.initial_db.down.sql
 ```
 
-You can also pass a tring to `create` and dbmigrate will slugify it for you:
+You can also pass a string to `create` and dbmigrate will slugify it for you:
 
 ```bash
 dbmigrate --url postgres://.. --path ./migrations create "change currency table"
