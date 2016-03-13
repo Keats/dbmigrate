@@ -85,7 +85,10 @@ pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
     for entry in fs::read_dir(path).unwrap() {
         let entry = entry.unwrap();
         // Will panic on invalid unicode in filename, unlikely (heh)
-        let info = try!(parse_filename(entry.file_name().to_str().unwrap()));
+        let info = match parse_filename(entry.file_name().to_str().unwrap()) {
+            Ok(info) => info,
+            Err(_) => continue,
+        };
         let mut file = try!(File::open(entry.path()));
         let mut content = String::new();
         try!(file.read_to_string(&mut content));
