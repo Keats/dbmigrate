@@ -1,14 +1,15 @@
-use postgres_client::{self, Connection, SslMode};
+use postgres_client::{Connection, SslMode};
 use openssl::ssl::{SslContext, SslMethod};
 use url::Url;
 
 use super::Driver;
 use errors::{MigrateError, MigrateResult};
 
+const SSLMODE: &'static str = "sslmode";
 
 #[derive(Debug)]
 pub struct Postgres {
-    conn: postgres_client::Connection
+    conn: Connection
 }
 
 impl Postgres {
@@ -60,18 +61,27 @@ impl Driver for Postgres {
 
 fn mk_connection(url: &str) -> Result<Connection, MigrateError> {
     let ctx = try!(SslContext::new(SslMethod::Sslv23));
-    let sslmode = try!(Url::parse(url))
-        .query_pairs()
+    let url = try!(Url::parse(url));
+    let sslmode = url.query_pairs()
         .and_then(|pairs|
-            pairs.into_iter().find(|&(ref k, _)| k == "sslmode"))
-        .map(|(_k, v)| match v.as_str() {
+            pairs.into_iter().find(|&(ref k, _)| k == SSLMODE))
+        .map(|(_, v)| match v.as_str() {
             "allow" | "prefer" => SslMode::Prefer(&ctx),
             "require" => SslMode::Require(&ctx),
             // No support for certificate verification yet.
             "verify-ca" | "verify-full" => unimplemented!(),
-            _ => SslMode::None
-        })
+            _ => SslMode::None })
         .unwrap_or(SslMode::None);
-    postgres_client::Connection::connect(url, sslmode)
+
+    Connection::connect(without_sslmode(&url).as_ref(), sslmode)
         .map_err(From::from)
+}
+
+fn without_sslmode(url: &Url) -> String {
+    let mut url = url.clone();
+    let no_sslmode = url.query_pairs().unwrap_or(vec![])
+        .into_iter()
+        .filter(|&(ref k, _)| k != SSLMODE);
+    url.set_query_from_pairs(no_sslmode);
+    url.serialize()
 }
