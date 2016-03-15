@@ -1,7 +1,9 @@
-use postgres_client::{self, SslMode};
+use postgres_client::{self, Connection, SslMode};
+use openssl::ssl::{SslContext, SslMethod};
+use url::Url;
 
 use super::Driver;
-use errors::{MigrateResult};
+use errors::{MigrateError, MigrateResult};
 
 
 #[derive(Debug)]
@@ -11,10 +13,9 @@ pub struct Postgres {
 
 impl Postgres {
     pub fn new(url: &str) -> MigrateResult<Postgres> {
-        let conn = try!(postgres_client::Connection::connect(url, SslMode::None));
+        let conn = try!(mk_connection(url));
         let pg = Postgres{ conn: conn };
         pg.ensure_migration_table_exists();
-
         Ok(pg)
     }
 }
@@ -55,4 +56,22 @@ impl Driver for Postgres {
 
         Ok(())
     }
+}
+
+fn mk_connection(url: &str) -> Result<Connection, MigrateError> {
+    let ctx = try!(SslContext::new(SslMethod::Sslv23));
+    let sslmode = try!(Url::parse(url))
+        .query_pairs()
+        .and_then(|pairs|
+            pairs.into_iter().find(|&(ref k, _)| k == "sslmode"))
+        .map(|(_k, v)| match v.as_str() {
+            "allow" | "prefer" => SslMode::Prefer(&ctx),
+            "require" => SslMode::Require(&ctx),
+            // No support for certificate verification yet.
+            "verify-ca" | "verify-full" => unimplemented!(),
+            _ => SslMode::None
+        })
+        .unwrap_or(SslMode::None);
+    postgres_client::Connection::connect(url, sslmode)
+        .map_err(From::from)
 }

@@ -12,11 +12,13 @@ keywords = ["database", "postgres", "migration", "sql", "mysql"]
 [dependencies]
 regex = "0.1"
 url = "0.5"
-postgres = "0.11"
+postgres = { version = "0.11.3", features = ["openssl"] }
 mysql = "1.2"
 clippy = {version = "~0.0.48", optional = true}
 time = "0.1"
 term = "0.2"
+openssl = "0.7.6"
+openssl-sys = "0.7.6"
 
 [dependencies.clap]
 version = "2"

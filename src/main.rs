@@ -16,6 +16,7 @@ extern crate postgres as postgres_client;
 extern crate mysql as mysql_client;
 extern crate time;
 extern crate term;
+extern crate openssl;
 
 use std::path::Path;
 use std::env;
