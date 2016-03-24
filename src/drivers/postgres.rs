@@ -3,7 +3,7 @@ use openssl::ssl::{SslContext, SslMethod};
 use url::Url;
 
 use super::Driver;
-use errors::{MigrateError, MigrateResult};
+use errors::MigrateResult;
 
 const SSLMODE: &'static str = "sslmode";
 
@@ -59,7 +59,7 @@ impl Driver for Postgres {
     }
 }
 
-fn mk_connection(url: &str) -> Result<Connection, MigrateError> {
+fn mk_connection(url: &str) -> MigrateResult<Connection> {
     let ctx = try!(SslContext::new(SslMethod::Sslv23));
     let url = try!(Url::parse(url));
     let sslmode = url.query_pairs()
