@@ -59,27 +59,32 @@ impl Driver for Postgres {
     }
 }
 
+// rust-postgres doesn't automatically support SSL from the url
+// (https://github.com/sfackler/rust-postgres/issues/166)
+// So we need to parse the url manually to check if we have some sslmode in it
+// and create a connection with the correct one
 fn mk_connection(url: &str) -> MigrateResult<Connection> {
     let ctx = try!(SslContext::new(SslMethod::Sslv23));
     let url = try!(Url::parse(url));
     let sslmode = url.query_pairs()
-        .and_then(|pairs|
-            pairs.into_iter().find(|&(ref k, _)| k == SSLMODE))
-        .map(|(_, v)| match v.as_str() {
-            "allow" | "prefer" => SslMode::Prefer(&ctx),
-            "require" => SslMode::Require(&ctx),
-            // No support for certificate verification yet.
-            "verify-ca" | "verify-full" => unimplemented!(),
-            _ => SslMode::None })
-        .unwrap_or(SslMode::None);
+        .and_then(|pairs| pairs.into_iter().find(|&(ref k, _)| k == SSLMODE))
+        .map_or(
+            SslMode::None,
+            |(_, v)| match v.as_str() {
+                "allow" | "prefer" => SslMode::Prefer(&ctx),
+                "require" => SslMode::Require(&ctx),
+                // No support for certificate verification yet.
+                "verify-ca" | "verify-full" => unimplemented!(),
+                _ => SslMode::None
+            }
+        );
 
-    Connection::connect(without_sslmode(&url).as_ref(), sslmode)
-        .map_err(From::from)
+    Connection::connect(without_sslmode(&url).as_ref(), sslmode).map_err(From::from)
 }
 
 fn without_sslmode(url: &Url) -> String {
     let mut url = url.clone();
-    let no_sslmode = url.query_pairs().unwrap_or(vec![])
+    let no_sslmode = url.query_pairs().unwrap_or_else(|| vec![])
         .into_iter()
         .filter(|&(ref k, _)| k != SSLMODE);
     url.set_query_from_pairs(no_sslmode);
