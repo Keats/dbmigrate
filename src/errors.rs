@@ -5,6 +5,8 @@ use std::process;
 
 use postgres_client;
 use mysql_client;
+use openssl;
+use url;
 
 use print;
 
@@ -33,7 +35,9 @@ pub enum MigrateErrorType {
     /// An error occured when running a SQL query in PG
     PostgresError,
     /// Couldn't connect to the mysql database or migration failed
-    MysqlError
+    MysqlError,
+    /// Couldn't create OpenSSL context
+    OpenSslError,
 }
 
 /// Our actual error
@@ -85,6 +89,8 @@ macro_rules! impl_from_error {
 }
 
 impl_from_error!(io::Error, MigrateErrorType::Io);
+impl_from_error!(openssl::ssl::error::SslError, MigrateErrorType::OpenSslError);
+impl_from_error!(url::ParseError, MigrateErrorType::InvalidUrl);
 
 impl From<postgres_client::error::Error> for MigrateError {
     fn from(e: postgres_client::error::Error) -> Self {
