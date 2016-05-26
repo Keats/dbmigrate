@@ -1,4 +1,4 @@
-use std::io::{self, Write};
+use std::io::{self};
 use std::fmt;
 use std::error::Error;
 use std::process;
@@ -110,8 +110,8 @@ impl From<postgres_client::error::ConnectError> for MigrateError {
     }
 }
 
-impl From<mysql_client::error::MyError> for MigrateError {
-    fn from(e: mysql_client::error::MyError) -> Self {
+impl From<mysql_client::Error> for MigrateError {
+    fn from(e: mysql_client::Error) -> Self {
         MigrateError {
             error: format!("MySQL error.\n{}", e),
             error_type: MigrateErrorType::MysqlError
