@@ -67,10 +67,10 @@ fn mk_connection(url: &str) -> MigrateResult<Connection> {
     let ctx = try!(SslContext::new(SslMethod::Sslv23));
     let url = try!(Url::parse(url));
     let sslmode = url.query_pairs()
-        .and_then(|pairs| pairs.into_iter().find(|&(ref k, _)| k == SSLMODE))
+        .find(|&(ref k, _)| k == SSLMODE)
         .map_or(
             SslMode::None,
-            |(_, v)| match v.as_str() {
+            |(_, v)| match v.as_ref() {
                 "allow" | "prefer" => SslMode::Prefer(&ctx),
                 "require" => SslMode::Require(&ctx),
                 // No support for certificate verification yet.
@@ -83,10 +83,14 @@ fn mk_connection(url: &str) -> MigrateResult<Connection> {
 }
 
 fn without_sslmode(url: &Url) -> String {
-    let mut url = url.clone();
-    let no_sslmode = url.query_pairs().unwrap_or_else(|| vec![])
-        .into_iter()
+    let pairs = url.query_pairs()
         .filter(|&(ref k, _)| k != SSLMODE);
-    url.set_query_from_pairs(no_sslmode);
-    url.serialize()
+
+    let mut cloned_url = url.clone();
+    cloned_url.query_pairs_mut().clear();
+    for (name, value) in pairs {
+        cloned_url.query_pairs_mut().append_pair(name.as_ref(), value.as_ref());
+    }
+
+    cloned_url.as_str().to_owned()
 }

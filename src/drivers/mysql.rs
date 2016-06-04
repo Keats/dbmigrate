@@ -1,9 +1,5 @@
-use std::default::Default;
-
-use mysql_client::conn::MyOpts;
 use mysql_client::value::from_row;
-use mysql_client::conn::pool::MyPool;
-use url::Url;
+use mysql_client::conn::pool::Pool;
 
 use super::Driver;
 use errors::{MigrateResult};
@@ -11,21 +7,12 @@ use errors::{MigrateResult};
 
 #[derive(Debug)]
 pub struct Mysql {
-    pool: MyPool
+    pool: Pool
 }
 
 impl Mysql {
-    pub fn new(url: Url) -> MigrateResult<Mysql> {
-        let opts = MyOpts {
-            tcp_addr: url.domain().map(|d| d.to_owned()),
-            tcp_port: url.port_or_default().unwrap(),
-            user: url.username().map(|d| d.to_owned()),
-            pass: url.password().map(|d| d.to_owned()),
-            db_name: url.path().map(|d| d[0].clone()),
-            ..Default::default()
-        };
-
-        let pool = try!(MyPool::new(opts));
+    pub fn new(url: &str) -> MigrateResult<Mysql> {
+        let pool = try!(Pool::new(url));
         let mysql = Mysql{ pool: pool };
         mysql.ensure_migration_table_exists();
 
