@@ -14,14 +14,12 @@ extern crate regex;
 extern crate url;
 extern crate postgres as postgres_client;
 extern crate mysql as mysql_client;
-extern crate time;
 extern crate term;
 extern crate openssl;
 
 use std::path::Path;
 use std::env;
-
-use time::PreciseTime;
+use std::time::Instant;
 
 mod files;
 mod drivers;
@@ -82,7 +80,7 @@ Using arguments will override the environment variables.
     let migration_files = files::read_migrations_files(path)
         .unwrap_or_else(|e| e.exit());
 
-    let start = PreciseTime::now();
+    let start = Instant::now();
 
     match matches.subcommand_name() {
         Some("status") => cmd::status(driver, &migration_files),
@@ -99,9 +97,9 @@ Using arguments will override the environment variables.
         _           => println!("Some other subcommand was used"),
     }
 
-    let duration = start.to(PreciseTime::now());
-    let minutes = duration.num_minutes();
-    let seconds = duration.num_seconds();
+    let duration = start.elapsed();
+    let minutes = duration.as_secs() / 60;
+    let seconds = duration.as_secs() % 60;
     // Spacing
     println!("");
     if minutes == 0 && seconds == 0 {
