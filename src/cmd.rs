@@ -1,6 +1,5 @@
 use std::path::Path;
-
-use time::PreciseTime;
+use std::time::Instant;
 
 use drivers::Driver;
 use files::{create_migration, Migrations, Direction};
@@ -15,7 +14,7 @@ macro_rules! migrate {
             $mig_file.direction.to_string(), $mig_file.number, $mig_file.name
         );
         {
-            let start = PreciseTime::now();
+            let start = Instant::now();
 
             match $driver.migrate(
                 $mig_file.content.clone().unwrap(),
@@ -23,8 +22,8 @@ macro_rules! migrate {
             ) {
                 Err(e) => e.exit(),
                 Ok(_) => {
-                    let duration = start.to(PreciseTime::now());
-                    print::success(&format!("> Done in {} second(s)", duration.num_seconds()));
+                    let duration = start.elapsed();
+                    print::success(&format!("> Done in {} second(s)", duration.as_secs()));
                 }
             }
         }
