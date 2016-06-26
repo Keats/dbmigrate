@@ -64,13 +64,6 @@ Using arguments will override the environment variables.
         )
     ).get_matches();
 
-
-    let url = matches.value_of("url")
-        .map(|s| s.into())
-        .or(env::var("DBMIGRATE_URL").ok())
-        .unwrap_or_else(|| errors::no_database_url().exit());
-    let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
-
     let path_value = matches.value_of("path")
         .map(|s| s.into())
         .or(env::var("DBMIGRATE_PATH").ok())
@@ -80,15 +73,24 @@ Using arguments will override the environment variables.
     let migration_files = files::read_migrations_files(path)
         .unwrap_or_else(|e| e.exit());
 
+    if let Some("create") = matches.subcommand_name() {
+        // Should be safe unwraps
+        let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
+        cmd::create(&migration_files, path, slug);
+        // Not ideal but cmd::create doesn't return a result
+        std::process::exit(0);
+    }
+
+    let url = matches.value_of("url")
+        .map(|s| s.into())
+        .or(env::var("DBMIGRATE_URL").ok())
+        .unwrap_or_else(|| errors::no_database_url().exit());
+    let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
+
     let start = Instant::now();
 
     match matches.subcommand_name() {
         Some("status") => cmd::status(driver, &migration_files),
-        Some("create") => {
-            // Should be safe unwraps
-            let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
-            cmd::create(&migration_files, path, slug)
-        },
         Some("up") => cmd::up(driver, &migration_files),
         Some("down") => cmd::down(driver, &migration_files),
         Some("redo") => cmd::redo(driver, &migration_files),
