@@ -55,6 +55,7 @@ dbmigrate --url postgres://.. --path ./migrations create "change currency table"
 - move to gitlab?
 
 ## Changelog
+0.2.4: Do not require DB connection to create migration file and update dependencies
 0.2.3: don't panic on invalid files in migration folder & ssl support for postgres
 0.2.2: slugify migration names and check if they are ok
 
