@@ -8,8 +8,7 @@
 #[cfg(test)]
 extern crate tempdir;
 
-#[macro_use]
-extern crate clap;
+#[macro_use] extern crate clap;
 extern crate regex;
 extern crate url;
 extern crate postgres as postgres_client;
@@ -95,8 +94,8 @@ Using arguments will override the environment variables.
         Some("down") => cmd::down(driver, &migration_files),
         Some("redo") => cmd::redo(driver, &migration_files),
         Some("revert") => cmd::revert(driver, &migration_files),
-        None        => println!("No subcommand was used"),
-        _           => println!("Some other subcommand was used"),
+        None => println!("No subcommand was used"),
+        _ => println!("Some other subcommand was used"),
     }
 
     let duration = start.elapsed();

@@ -15,7 +15,7 @@ pub struct Postgres {
 impl Postgres {
     pub fn new(url: &str) -> MigrateResult<Postgres> {
         let conn = try!(mk_connection(url));
-        let pg = Postgres{ conn: conn };
+        let pg = Postgres { conn: conn };
         pg.ensure_migration_table_exists();
         Ok(pg)
     }

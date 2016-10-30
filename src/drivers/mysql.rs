@@ -13,7 +13,7 @@ pub struct Mysql {
 impl Mysql {
     pub fn new(url: &str) -> MigrateResult<Mysql> {
         let pool = try!(Pool::new(url));
-        let mysql = Mysql{ pool: pool };
+        let mysql = Mysql { pool: pool };
         mysql.ensure_migration_table_exists();
 
         Ok(mysql)
@@ -48,7 +48,7 @@ impl Driver for Mysql {
     fn set_current_number(&self, number: i32) {
         self.pool.prep_exec(
             "UPDATE __dbmigrate_table SET current = ? WHERE id = 1;",
-            (&number,)
+            (&number, )
         ).unwrap();
     }
 

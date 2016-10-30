@@ -47,7 +47,7 @@ pub fn status(driver: Box<Driver>, migration_files: &Migrations) {
     if current == 0 {
         print::success("No migration has been ran");
     }
-    for (number, migration) in migration_files.iter(){
+    for (number, migration) in migration_files.iter() {
         let mig_file = migration.up.as_ref().unwrap();
         if number == &current {
             print::success(&format!("{} - {} (current)", mig_file.number, mig_file.name));
@@ -66,7 +66,7 @@ pub fn up(driver: Box<Driver>, migration_files: &Migrations) {
         return;
     }
 
-    for (number, migration) in migration_files.iter(){
+    for (number, migration) in migration_files.iter() {
         if number > &current {
             let mig_file = migration.up.as_ref().unwrap();
             migrate!(driver, mig_file);

@@ -93,10 +93,10 @@ pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
         let mut content = String::new();
         try!(file.read_to_string(&mut content));
 
-        let migration_file = MigrationFile {content: Some(content), ..info};
+        let migration_file = MigrationFile { content: Some(content), ..info };
         let migration_number = migration_file.number;
         let mut migration = match btreemap.remove(&migration_number) {
-            None => Migration {up: None, down: None},
+            None => Migration { up: None, down: None },
             Some(m) => m
         };
         if migration_file.direction == Direction::Up {
