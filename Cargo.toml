@@ -1,10 +1,10 @@
 [package]
 name = "dbmigrate"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-description = "CLI tool to create and run SQL migrations. Postgres and MySQL supported."
+description = "CLI tool to create and run SQL migrations. Postgres, MySQL and Sqlite supported."
 homepage = "https://github.com/Keats/dbmigrate"
 repository = "https://github.com/Keats/dbmigrate"
 keywords = ["database", "postgres", "migration", "sql", "mysql"]
