@@ -13,6 +13,7 @@ extern crate regex;
 extern crate url;
 extern crate postgres as postgres_client;
 extern crate mysql as mysql_client;
+extern crate rusqlite as sqlite_client;
 extern crate term;
 extern crate openssl;
 
@@ -67,6 +68,7 @@ Using arguments will override the environment variables.
         .map(|s| s.into())
         .or(env::var("DBMIGRATE_PATH").ok())
         .unwrap_or_else(|| errors::no_migration_path().exit());
+
     let path = Path::new(&path_value);
 
     let migration_files = files::read_migrations_files(path)

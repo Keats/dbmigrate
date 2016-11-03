@@ -5,6 +5,7 @@ use std::process;
 
 use postgres_client;
 use mysql_client;
+use sqlite_client;
 use openssl;
 use url;
 
@@ -36,6 +37,8 @@ pub enum MigrateErrorType {
     PostgresError,
     /// Couldn't connect to the mysql database or migration failed
     MysqlError,
+    /// Couldn't connect to the sqlite database or migration failed
+    SqliteError,
     /// Couldn't create OpenSSL context
     OpenSslError,
 }
@@ -88,6 +91,7 @@ macro_rules! impl_from_error {
     }
 }
 
+// TODO: gives a bad error message if folder not found, fix it
 impl_from_error!(io::Error, MigrateErrorType::Io);
 impl_from_error!(openssl::ssl::error::SslError, MigrateErrorType::OpenSslError);
 impl_from_error!(url::ParseError, MigrateErrorType::InvalidUrl);
@@ -115,6 +119,15 @@ impl From<mysql_client::Error> for MigrateError {
         MigrateError {
             error: format!("MySQL error.\n{}", e),
             error_type: MigrateErrorType::MysqlError
+        }
+    }
+}
+
+impl From<sqlite_client::Error> for MigrateError {
+    fn from(e: sqlite_client::Error) -> Self {
+        MigrateError {
+            error: format!("Sqlite error.\n{}", e),
+            error_type: MigrateErrorType::SqliteError
         }
     }
 }
@@ -156,7 +169,7 @@ pub fn no_database_url() -> MigrateError {
 
 pub fn invalid_url(url: &str) -> MigrateError {
     MigrateError {
-        error: format!("URL provided is not supported (only postgres and mysql are supported): {}", url),
+        error: format!("URL provided is not supported (only postgres, mysql and sqlite are supported): {}", url),
         error_type: MigrateErrorType::InvalidUrl
     }
 }

@@ -49,6 +49,26 @@ dbmigrate --url postgres://.. --path ./migrations create "change currency table"
 
 `.` (dot) is not allowed in a migration name as it is the filename separator character.
 
+## Test locally
+Build the project first with `cargo build`.
+Assuming you use the docker images in the Makefile for pg and mysql:
+
+Postgres:
+
+```bash
+./target/release/dbmigrate --url=postgres://pg@localhost:5777/migrate --path=/my/full/path/migrations status
+```
+
+MySQL:
+```bash
+./target/release/dbmigrate --url=mysql://mg:pass@localhost:5789/migrate --path=/my/full/path/migrations status
+```
+
+For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
+```bash
+./target/release/dbmigrate --path=/home/vincent/Code/dbmigrate/examples/migrations --url=sqlite:///dbmigrate.db status 
+```
+
 ## TODO
 
 - find a way to do integration testing on travis + rust (use a python script?)

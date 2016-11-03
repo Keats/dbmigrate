@@ -14,6 +14,7 @@ regex = "0.1"
 url = "1"
 postgres = { version = "0.11", features = ["openssl"] }
 mysql = "7.0"
+rusqlite = "0.7"
 clippy = {version = "~0.0.69", optional = true}
 term = "0.4"
 openssl = "0.7"

@@ -8,7 +8,6 @@ use std::collections::{BTreeMap};
 use regex::Regex;
 use errors::{invalid_filename, migration_skipped, missing_file, MigrateResult};
 
-
 #[derive(Debug, PartialEq)]
 pub enum Direction {
     Up,
@@ -82,7 +81,7 @@ pub type Migrations = BTreeMap<i32, Migration>;
 pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
     let mut btreemap: Migrations = BTreeMap::new();
 
-    for entry in fs::read_dir(path).unwrap() {
+    for entry in try!(fs::read_dir(path)) {
         let entry = entry.unwrap();
         // Will panic on invalid unicode in filename, unlikely (heh)
         let info = match parse_filename(entry.file_name().to_str().unwrap()) {

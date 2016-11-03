@@ -5,6 +5,7 @@ use errors::{MigrateResult, invalid_url};
 
 mod mysql;
 mod postgres;
+mod sqlite;
 
 
 pub trait Driver {
@@ -18,9 +19,11 @@ pub trait Driver {
 /// Returns a driver instance depending on url
 pub fn get_driver(url: &str) -> MigrateResult<Box<Driver>> {
     let parsed_url = try!(Url::parse(url));
+
     match parsed_url.scheme() {
         "postgres" => postgres::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
         "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<Driver>),
+        "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<Driver>),
         _ => Err(invalid_url(url))
     }
 }
