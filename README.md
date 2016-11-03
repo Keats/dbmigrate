@@ -75,9 +75,12 @@ For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 - move to gitlab?
 
 ## Changelog
-0.2.4: Do not require DB connection to create migration file and update dependencies
-0.2.3: don't panic on invalid files in migration folder & ssl support for postgres
-0.2.2: slugify migration names and check if they are ok
+
+- 0.2.6: Support Sqlite
+- 0.2.5: Update dependencies
+- 0.2.4: Do not require DB connection to create migration file and update dependencies
+- 0.2.3: don't panic on invalid files in migration folder & ssl support for postgres
+- 0.2.2: slugify migration names and check if they are ok
 
 ## Acknowledgments
 This is heavily inspired by [https://github.com/mattes/migrate](https://github.com/mattes/migrate).

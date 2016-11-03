@@ -1,6 +1,6 @@
 [package]
 name = "dbmigrate"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
