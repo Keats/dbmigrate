@@ -10,6 +10,7 @@ A tool to create and manage SQL migrations.
 
 - Postgres
 - MySQL
+- Sqlite
 
 ## Usage
 
@@ -76,6 +77,7 @@ For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 
 ## Changelog
 
+- 0.2.7: Update docs to mention sqlite support
 - 0.2.6: Support Sqlite
 - 0.2.5: Update dependencies
 - 0.2.4: Do not require DB connection to create migration file and update dependencies
