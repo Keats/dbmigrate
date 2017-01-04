@@ -16,6 +16,7 @@ extern crate mysql as mysql_client;
 extern crate rusqlite as sqlite_client;
 extern crate term;
 extern crate openssl;
+extern crate dotenv;
 
 use std::path::Path;
 use std::env;
@@ -29,6 +30,8 @@ mod print;
 
 
 fn main() {
+    dotenv::dotenv().ok();
+
     let matches = clap_app!(myapp =>
         (@setting SubcommandRequiredElseHelp)
         (version: &crate_version!()[..])
@@ -37,8 +40,8 @@ fn main() {
 Handles migrations for databases.
 Each call requires the database url and the path to the directory containing
 the SQL migration files.
-Those can be set using the DBMIGRATE_URL and DBMIGRATE_PATH environment variables
-or the --url and --path arguments.
+Those can be set using the DBMIGRATE_URL and DBMIGRATE_PATH environment 
+variables, via a .env file, or the --url and --path arguments.
 Using arguments will override the environment variables.
         ")
         (@arg url: -u --url +takes_value "Sets the URL of the database to use.")
