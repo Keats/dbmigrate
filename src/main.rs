@@ -1,4 +1,4 @@
-//! Handles Postgres migrations
+//! CLI to manage SQL migrations for Postgres, MySQL and SQLite
 //!
 
 #![cfg_attr(feature = "dev", allow(unstable_features))]
@@ -15,8 +15,8 @@ extern crate postgres as postgres_client;
 extern crate mysql as mysql_client;
 extern crate rusqlite as sqlite_client;
 extern crate term;
-extern crate openssl;
 extern crate dotenv;
+#[macro_use] extern crate error_chain;
 
 use std::path::Path;
 use std::env;
@@ -28,8 +28,22 @@ mod errors;
 mod cmd;
 mod print;
 
+use errors::{Result, ResultExt};
+
 
 fn main() {
+    if let Err(ref e) = run() {
+        print::error(&format!("{}", e));
+        for e in e.iter().skip(1) {
+            print::error(&format!("caused by: {}", e));
+        }
+
+        ::std::process::exit(1);
+    }
+}
+
+
+fn run() -> Result<()> {
     dotenv::dotenv().ok();
 
     let matches = clap_app!(myapp =>
@@ -40,7 +54,7 @@ fn main() {
 Handles migrations for databases.
 Each call requires the database url and the path to the directory containing
 the SQL migration files.
-Those can be set using the DBMIGRATE_URL and DBMIGRATE_PATH environment 
+Those can be set using the DBMIGRATE_URL and DBMIGRATE_PATH environment
 variables, via a .env file, or the --url and --path arguments.
 Using arguments will override the environment variables.
         ")
@@ -67,38 +81,37 @@ Using arguments will override the environment variables.
         )
     ).get_matches();
 
-    let path_value = matches.value_of("path")
-        .map(|s| s.into())
-        .or(env::var("DBMIGRATE_PATH").ok())
-        .unwrap_or_else(|| errors::no_migration_path().exit());
-
+    let path_value = match matches.value_of("path").map(|s| s.into()).or(env::var("DBMIGRATE_PATH").ok()) {
+      Some(u) => u,
+      None => bail!("No migration path was provided in the environment or via a command arg.")
+    };
     let path = Path::new(&path_value);
 
-    let migration_files = files::read_migrations_files(path)
-        .unwrap_or_else(|e| e.exit());
+    let migration_files = files::read_migrations_files(path)?;
 
     if let Some("create") = matches.subcommand_name() {
         // Should be safe unwraps
         let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
-        cmd::create(&migration_files, path, slug);
-        // Not ideal but cmd::create doesn't return a result
-        std::process::exit(0);
+        match cmd::create(&migration_files, path, slug) {
+            Ok(_) => std::process::exit(0),
+            Err(e) => return Err(e)
+        }
     }
 
-    let url = matches.value_of("url")
-        .map(|s| s.into())
-        .or(env::var("DBMIGRATE_URL").ok())
-        .unwrap_or_else(|| errors::no_database_url().exit());
-    let driver = drivers::get_driver(&url).unwrap_or_else(|e| e.exit());
+    let url = match matches.value_of("url").map(|s| s.into()).or(env::var("DBMIGRATE_URL").ok()) {
+      Some(u) => u,
+      None => bail!("No database url was provided in the environment or via a command arg.")
+    };
+    let driver = drivers::get_driver(&url).chain_err(|| "Failed to get DB connection")?;
 
     let start = Instant::now();
 
     match matches.subcommand_name() {
-        Some("status") => cmd::status(driver, &migration_files),
-        Some("up") => cmd::up(driver, &migration_files),
-        Some("down") => cmd::down(driver, &migration_files),
-        Some("redo") => cmd::redo(driver, &migration_files),
-        Some("revert") => cmd::revert(driver, &migration_files),
+        Some("status") => cmd::status(driver, &migration_files)?,
+        Some("up") => cmd::up(driver, &migration_files)?,
+        Some("down") => cmd::down(driver, &migration_files)?,
+        Some("redo") => cmd::redo(driver, &migration_files)?,
+        Some("revert") => cmd::revert(driver, &migration_files)?,
         None => println!("No subcommand was used"),
         _ => println!("Some other subcommand was used"),
     }
@@ -113,4 +126,6 @@ Using arguments will override the environment variables.
     } else {
         println!("Operation took {} minutes and {} seconds", minutes, seconds);
     }
+
+    Ok(())
 }

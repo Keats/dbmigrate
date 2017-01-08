@@ -2,7 +2,7 @@ use mysql_client::value::from_row;
 use mysql_client::conn::pool::Pool;
 
 use super::Driver;
-use errors::{MigrateResult};
+use errors::{Result, ResultExt};
 
 
 #[derive(Debug)]
@@ -11,8 +11,8 @@ pub struct Mysql {
 }
 
 impl Mysql {
-    pub fn new(url: &str) -> MigrateResult<Mysql> {
-        let pool = try!(Pool::new(url));
+    pub fn new(url: &str) -> Result<Mysql> {
+        let pool = Pool::new(url)?;
         let mysql = Mysql { pool: pool };
         mysql.ensure_migration_table_exists();
 
@@ -52,9 +52,9 @@ impl Driver for Mysql {
         ).unwrap();
     }
 
-    fn migrate(&self, migration: String, number: i32) -> MigrateResult<()> {
-        let mut conn = try!(self.pool.get_conn());
-        try!(conn.query(migration));
+    fn migrate(&self, migration: String, number: i32) -> Result<()> {
+        let mut conn = self.pool.get_conn()?;
+        conn.query(migration).chain_err(|| "Migration failed")?;
         self.set_current_number(number);
 
         Ok(())
