@@ -19,6 +19,7 @@ clippy = {version = "~0.0.69", optional = true}
 term = "0.4"
 openssl = "0.7"
 openssl-sys = "0.7"
+dotenv = "0.8"
 
 [dependencies.clap]
 version = "2"

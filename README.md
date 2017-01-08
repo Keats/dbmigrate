@@ -15,7 +15,7 @@ A tool to create and manage SQL migrations.
 ## Usage
 
 Every call to dbmigrate requires 2 arguments: database url and migrations folder.
-Those can be set through environment variables: `DBMIGRATE_URL` and `DBMIGRATE_PATH` or as args to a call. Argument will override an environment variable.
+Those can be set through environment variables: `DBMIGRATE_URL` and `DBMIGRATE_PATH`, using a .env file, or as args to a call. Argument will override an environment variable.
 
 ```bash
 # create a migration file
