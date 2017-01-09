@@ -1,11 +1,12 @@
-use postgres_client::{Connection, SslMode};
-use openssl::ssl::{SslContext, SslMethod};
+use postgres_client::{Connection, TlsMode};
+use postgres_client::tls::native_tls::NativeTls;
 use url::Url;
 
 use super::Driver;
-use errors::MigrateResult;
+use errors::{Result, ResultExt};
 
 const SSLMODE: &'static str = "sslmode";
+
 
 #[derive(Debug)]
 pub struct Postgres {
@@ -13,8 +14,8 @@ pub struct Postgres {
 }
 
 impl Postgres {
-    pub fn new(url: &str) -> MigrateResult<Postgres> {
-        let conn = try!(mk_connection(url));
+    pub fn new(url: &str) -> Result<Postgres> {
+        let conn = mk_connection(url)?;
         let pg = Postgres { conn: conn };
         pg.ensure_migration_table_exists();
         Ok(pg)
@@ -51,8 +52,8 @@ impl Driver for Postgres {
         stmt.execute(&[&number]).unwrap();
     }
 
-    fn migrate(&self, migration: String, number: i32) -> MigrateResult<()> {
-        try!(self.conn.batch_execute(&migration));
+    fn migrate(&self, migration: String, number: i32) -> Result<()> {
+        self.conn.batch_execute(&migration).chain_err(|| "Migration failed")?;
         self.set_current_number(number);
 
         Ok(())
@@ -63,19 +64,19 @@ impl Driver for Postgres {
 // (https://github.com/sfackler/rust-postgres/issues/166)
 // So we need to parse the url manually to check if we have some sslmode in it
 // and create a connection with the correct one
-fn mk_connection(url: &str) -> MigrateResult<Connection> {
-    let ctx = try!(SslContext::new(SslMethod::Sslv23));
-    let url = try!(Url::parse(url));
+fn mk_connection(url: &str) -> Result<Connection> {
+    let negotiator = NativeTls::new().unwrap();
+    let url = Url::parse(url).unwrap();
     let sslmode = url.query_pairs()
         .find(|&(ref k, _)| k == SSLMODE)
         .map_or(
-            SslMode::None,
+            TlsMode::None,
             |(_, v)| match v.as_ref() {
-                "allow" | "prefer" => SslMode::Prefer(&ctx),
-                "require" => SslMode::Require(&ctx),
+                "allow" | "prefer" => TlsMode::Prefer(&negotiator),
+                "require" => TlsMode::Require(&negotiator),
                 // No support for certificate verification yet.
                 "verify-ca" | "verify-full" => unimplemented!(),
-                _ => SslMode::None
+                _ => TlsMode::None
             }
         );
 

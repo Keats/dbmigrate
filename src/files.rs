@@ -6,7 +6,7 @@ use std::path::Path;
 use std::collections::{BTreeMap};
 
 use regex::Regex;
-use errors::{invalid_filename, migration_skipped, missing_file, MigrateResult};
+use errors::{Result, ResultExt};
 
 #[derive(Debug, PartialEq)]
 pub enum Direction {
@@ -52,17 +52,17 @@ pub struct Migration {
 }
 
 /// Creates 2 migration file: one up and one down
-pub fn create_migration(path: &Path, slug: &str, number: i32) -> MigrateResult<()> {
+pub fn create_migration(path: &Path, slug: &str, number: i32) -> Result<()> {
     let fixed_slug = slug.replace(" ", "_");
     let filename_up = get_filename(&fixed_slug, number, Direction::Up);
-    try!(parse_filename(&filename_up));
+    parse_filename(&filename_up)?;
     let filename_down = get_filename(&fixed_slug, number, Direction::Down);
-    try!(parse_filename(&filename_down));
+    parse_filename(&filename_down)?;
 
     println!("Creating {}", filename_up);
-    try!(File::create(path.join(filename_up)));
+    File::create(path.join(filename_up.clone())).chain_err(|| format!("Failed to create {}", filename_up))?;
     println!("Creating {}", filename_down);
-    try!(File::create(path.join(filename_down)));
+    File::create(path.join(filename_down.clone())).chain_err(|| format!("Failed to create {}", filename_down))?;
 
     Ok(())
 }
@@ -78,19 +78,20 @@ pub type Migrations = BTreeMap<i32, Migration>;
 
 /// Read the path given and read all the migration files, pairing them by migration
 /// number and checking for errors along the way
-pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
+pub fn read_migrations_files(path: &Path) -> Result<Migrations> {
     let mut btreemap: Migrations = BTreeMap::new();
 
-    for entry in try!(fs::read_dir(path)) {
+    for entry in fs::read_dir(path).chain_err(|| format!("Failed to open {:?}", path))? {
         let entry = entry.unwrap();
         // Will panic on invalid unicode in filename, unlikely (heh)
         let info = match parse_filename(entry.file_name().to_str().unwrap()) {
             Ok(info) => info,
             Err(_) => continue,
         };
-        let mut file = try!(File::open(entry.path()));
+        let mut file = File::open(entry.path())
+            .chain_err(|| format!("Failed to open {:?}", entry.path()))?;
         let mut content = String::new();
-        try!(file.read_to_string(&mut content));
+        file.read_to_string(&mut content)?;
 
         let migration_file = MigrationFile { content: Some(content), ..info };
         let migration_number = migration_file.number;
@@ -110,10 +111,10 @@ pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
     let mut index = 1;
     for (number, migration) in &btreemap {
         if index != *number {
-            return Err(migration_skipped(index));
+            bail!("Files for migration {} are missing", index);
         }
         if migration.up.is_none() || migration.down.is_none() {
-            return Err(missing_file(index));
+            bail!("Migration {} is missing its up or down file", index);
         }
         index += 1;
     }
@@ -122,20 +123,20 @@ pub fn read_migrations_files(path: &Path) -> MigrateResult<Migrations> {
 
 /// Gets a filename and check whether it's a valid format.
 /// If it is, grabs all the info from it
-fn parse_filename(filename: &str) -> MigrateResult<MigrationFile> {
+fn parse_filename(filename: &str) -> Result<MigrationFile> {
     let re = Regex::new(
         r"^(?P<number>[0-9]{4})\.(?P<name>[_0-9a-zA-Z]*)\.(?P<direction>up|down)\.sql$"
     ).unwrap();
 
     let caps = match re.captures(filename) {
-        None => return Err(invalid_filename(filename)),
+        None => bail!("File {} has an invalid filename", filename),
         Some(c) => c
     };
 
     // Unwrapping below should be safe (in theory)
-    let number = caps.name("number").unwrap().parse::<i32>().unwrap();
-    let name = caps.name("name").unwrap();
-    let direction = if caps.name("direction").unwrap() == "up" {
+    let number = caps.name("number").unwrap().as_str().parse::<i32>().unwrap();
+    let name = caps.name("name").unwrap().as_str();
+    let direction = if caps.name("direction").unwrap().as_str() == "up" {
         Direction::Up
     } else {
         Direction::Down

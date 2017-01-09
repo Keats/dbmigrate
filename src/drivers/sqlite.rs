@@ -1,7 +1,7 @@
 use sqlite_client::Connection;
 
 use super::Driver;
-use errors::{MigrateResult};
+use errors::{Result, ResultExt};
 
 
 #[derive(Debug)]
@@ -10,9 +10,9 @@ pub struct Sqlite {
 }
 
 impl Sqlite {
-    pub fn new(url: &str) -> MigrateResult<Sqlite> {
+    pub fn new(url: &str) -> Result<Sqlite> {
         // the replace is probably wrong
-        let conn = try!(Connection::open(url.replace("sqlite:/", "")));
+        let conn = Connection::open(url.replace("sqlite:/", ""))?;
         let sqlite = Sqlite { conn: conn };
         sqlite.ensure_migration_table_exists();
         Ok(sqlite)
@@ -46,8 +46,8 @@ impl Driver for Sqlite {
         stmt.execute(&[&number]).unwrap();
     }
 
-    fn migrate(&self, migration: String, number: i32) -> MigrateResult<()> {
-        try!(self.conn.execute_batch(&migration));
+    fn migrate(&self, migration: String, number: i32) -> Result<()> {
+        self.conn.execute_batch(&migration).chain_err(|| "Migration failed")?;
         self.set_current_number(number);
 
         Ok(())

@@ -10,16 +10,14 @@ repository = "https://github.com/Keats/dbmigrate"
 keywords = ["database", "postgres", "migration", "sql", "mysql"]
 
 [dependencies]
-regex = "0.1"
+regex = "0.2"
 url = "1"
-postgres = { version = "0.11", features = ["openssl"] }
-mysql = "7.0"
-rusqlite = "0.7"
-clippy = {version = "~0.0.69", optional = true}
+postgres = { version = "0.13", features = ["with-native-tls"] }
+mysql = "8.0"
+rusqlite = "0.8"
 term = "0.4"
-openssl = "0.7"
-openssl-sys = "0.7"
 dotenv = "0.8"
+error-chain = "0.7"
 
 [dependencies.clap]
 version = "2"
@@ -28,7 +26,3 @@ features = [ "suggestions", "color" , "unstable"]
 
 [dev-dependencies]
 tempdir = "0.3.4"
-
-[features]
-default = []
-dev = ["clippy"]

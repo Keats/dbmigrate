@@ -1,15 +1,29 @@
 language: rust
-sudo: false
 rust:
   - stable
   - beta
   - nightly
 env:
   global:
-    - DBMIGRATE_URL=postgres://postgres@localhost/migrate
-    - DBMIGRATE_PATH=migrations/
+    - DBMIGRATE_PATH=./examples/migrations/
+
 notifications:
   email: false
-matrix:
-  allow_failures:
-    - rust: nightly
+
+services:
+  - mysql
+  - postgresql
+  - sqlite3
+
+before_script:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS migrate;'
+  - psql -c 'create database migrate;' -U postgres
+  - touch migrate.db
+  - chmod 777 migrate.db
+
+script:
+  - cargo build
+  - cargo test
+  - DBMIGRATE_URL=postgres://postgres@localhost/migrate cargo run status
+  - DBMIGRATE_URL=mysql://travis@localhost/migrate cargo run status
+  - DBMIGRATE_URL=sqlite://`pwd`/migrate.db cargo run status
