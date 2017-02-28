@@ -1,9 +1,9 @@
 [package]
 name = "dbmigrate"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT OR Apache-2.0"
-readme = "README.md"
+readme = "../README.md"
 description = "CLI tool to create and run database migrations. Postgres, MySQL supported."
 homepage = "https://github.com/Keats/dbmigrate"
 repository = "https://github.com/Keats/dbmigrate"
@@ -20,5 +20,5 @@ default-features = false
 features = [ "suggestions", "color" , "unstable"]
 
 [dependencies.dbmigrate-lib]
-path = "../dbmigrate-lib"
-# version = "0.1.0"
+# path = "../dbmigrate-lib"
+version = "0.1.0"

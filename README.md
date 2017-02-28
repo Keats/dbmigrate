@@ -14,6 +14,7 @@ A tool to create and manage SQL migrations.
 
 ## Usage
 
+### Using CLI
 Every call to dbmigrate requires 2 arguments: database url and migrations folder.
 Those can be set through environment variables: `DBMIGRATE_URL` and `DBMIGRATE_PATH`, using a .env file, or as args to a call. Argument will override an environment variable.
 
@@ -50,6 +51,13 @@ dbmigrate --url postgres://.. --path ./migrations create "change currency table"
 
 `.` (dot) is not allowed in a migration name as it is the filename separator character.
 
+### Using the library
+Migrations can also be done programmatically and is how the CLI tool is built.
+
+You will need to add the `dbmigrate-lib` dependency to your `Cargo.toml` file. The best example to see how how to make it work
+is to look at the `dbmigrate` directory, which uses it to implement the CLI tool.
+
+
 ## Test locally
 Build the project first with `cargo build`.
 Assuming you use the docker images in the Makefile for pg and mysql:
@@ -70,10 +78,6 @@ For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 ./target/release/dbmigrate --path=/home/vincent/Code/dbmigrate/examples/migrations --url=sqlite:///dbmigrate.db status 
 ```
 
-## TODO
-
-- find a way to do integration testing on travis + rust (use a python script?)
-- move to gitlab?
 
 ## Changelog
 

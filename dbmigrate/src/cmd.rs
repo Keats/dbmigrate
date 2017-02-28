@@ -1,8 +1,7 @@
 use std::path::Path;
 use std::time::Instant;
 
-use dbmigrate_lib::drivers::Driver;
-use dbmigrate_lib::files::{create_migration, Migrations, Direction};
+use dbmigrate_lib::{Driver, create_migration, Migrations, Direction};
 use print;
 use errors::{Result};
 

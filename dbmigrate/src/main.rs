@@ -16,8 +16,7 @@ mod print;
 mod errors;
 
 use errors::{Result, ResultExt};
-use dbmigrate_lib::files::read_migration_files;
-use dbmigrate_lib::drivers::get_driver;
+use dbmigrate_lib::{read_migration_files, get_driver};
 
 
 fn main() {

@@ -8,9 +8,12 @@ use std::collections::{BTreeMap};
 use regex::Regex;
 use errors::{Result, ResultExt};
 
+/// A migration direction, can be Up or Down
 #[derive(Debug, PartialEq)]
 pub enum Direction {
+    /// Self-explanatory
     Up,
+    /// Self-explanatory
     Down
 }
 
@@ -23,14 +26,32 @@ impl ToString for Direction {
     }
 }
 
+/// A single direction migration file
 #[derive(Debug)]
 pub struct MigrationFile {
+    /// Content of the file
     pub content: Option<String>,
+    /// Direction
     pub direction: Direction,
+    /// Number
     pub number: i32,
+    /// Filename
     pub filename: String,
+    /// Actual migration name (filename with number removed)
     pub name: String
 }
+
+/// A migration has 2 files: one up and one down
+#[derive(Debug)]
+pub struct Migration {
+    /// The Up file
+    pub up: Option<MigrationFile>,
+    /// The Down file
+    pub down: Option<MigrationFile>
+}
+
+/// Simple way to hold migrations indexed by their number
+pub type Migrations = BTreeMap<i32, Migration>;
 
 impl MigrationFile {
     /// Used when getting the info, therefore setting content to None at that point
@@ -43,12 +64,6 @@ impl MigrationFile {
             direction: direction
         }
     }
-}
-
-#[derive(Debug)]
-pub struct Migration {
-    pub up: Option<MigrationFile>,
-    pub down: Option<MigrationFile>
 }
 
 /// Creates 2 migration file: one up and one down
@@ -73,8 +88,6 @@ fn get_filename(slug: &str, number: i32, direction: Direction) -> String {
     let filler = repeat("0").take(4 - num.len()).collect::<String>();
     filler + &num + "." + slug + "." + &direction.to_string() + ".sql"
 }
-
-pub type Migrations = BTreeMap<i32, Migration>;
 
 /// Read the path given and read all the migration files, pairing them by migration
 /// number and checking for errors along the way

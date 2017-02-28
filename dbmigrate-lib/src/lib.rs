@@ -1,5 +1,6 @@
-//! Database migrations for Postgres, MySQL, SQLite and Cassandra.
+//! Database migrations for Postgres, MySQL, and SQLite.
 //!
+#![deny(missing_docs)]
 
 #[cfg(test)]
 extern crate tempdir;
@@ -12,6 +13,17 @@ extern crate rusqlite as sqlite_client;
 #[macro_use]
 extern crate error_chain;
 
-pub mod files;
-pub mod drivers;
+mod files;
+mod drivers;
+/// All possible errors
 pub mod errors;
+
+pub use drivers::{get_driver, Driver};
+pub use files::{
+    create_migration,
+    read_migration_files,
+    MigrationFile,
+    Migration,
+    Migrations,
+    Direction,
+};
