@@ -1,34 +1,23 @@
 //! CLI to manage SQL migrations for Postgres, MySQL and SQLite
 //!
 
-#![cfg_attr(feature = "dev", allow(unstable_features))]
-#![cfg_attr(feature = "dev", feature(plugin))]
-#![cfg_attr(feature = "dev", plugin(clippy))]
-
-#[cfg(test)]
-extern crate tempdir;
-
 #[macro_use] extern crate clap;
-extern crate regex;
-extern crate url;
-extern crate postgres as postgres_client;
-extern crate mysql as mysql_client;
-extern crate rusqlite as sqlite_client;
+#[macro_use] extern crate error_chain;
+extern crate dbmigrate_lib;
 extern crate term;
 extern crate dotenv;
-#[macro_use] extern crate error_chain;
 
 use std::path::Path;
 use std::env;
 use std::time::Instant;
 
-mod files;
-mod drivers;
-mod errors;
 mod cmd;
 mod print;
+mod errors;
 
 use errors::{Result, ResultExt};
+use dbmigrate_lib::files::read_migration_files;
+use dbmigrate_lib::drivers::get_driver;
 
 
 fn main() {
@@ -87,7 +76,7 @@ Using arguments will override the environment variables.
     };
     let path = Path::new(&path_value);
 
-    let migration_files = files::read_migrations_files(path)?;
+    let migration_files = read_migration_files(path)?;
 
     if let Some("create") = matches.subcommand_name() {
         // Should be safe unwraps
@@ -102,7 +91,7 @@ Using arguments will override the environment variables.
       Some(u) => u,
       None => bail!("No database url was provided in the environment or via a command arg.")
     };
-    let driver = drivers::get_driver(&url).chain_err(|| "Failed to get DB connection")?;
+    let driver = get_driver(&url).chain_err(|| "Failed to get DB connection")?;
 
     let start = Instant::now();
 

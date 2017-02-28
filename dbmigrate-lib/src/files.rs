@@ -78,7 +78,7 @@ pub type Migrations = BTreeMap<i32, Migration>;
 
 /// Read the path given and read all the migration files, pairing them by migration
 /// number and checking for errors along the way
-pub fn read_migrations_files(path: &Path) -> Result<Migrations> {
+pub fn read_migration_files(path: &Path) -> Result<Migrations> {
     let mut btreemap: Migrations = BTreeMap::new();
 
     for entry in fs::read_dir(path).chain_err(|| format!("Failed to open {:?}", path))? {
@@ -147,7 +147,7 @@ fn parse_filename(filename: &str) -> Result<MigrationFile> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_filename, read_migrations_files, Direction, get_filename};
+    use super::{parse_filename, read_migration_files, Direction, get_filename};
     use tempdir::TempDir;
     use std::path::{PathBuf};
     use std::io::prelude::*;
@@ -188,7 +188,7 @@ mod tests {
         create_file(&pathbuf, "0001.tests.down.sql");
         create_file(&pathbuf, "0002.tests_second.up.sql");
         create_file(&pathbuf, "0002.tests_second.down.sql");
-        let migrations = read_migrations_files(pathbuf.as_path());
+        let migrations = read_migration_files(pathbuf.as_path());
 
         assert_eq!(migrations.is_ok(), true);
     }
@@ -199,7 +199,7 @@ mod tests {
         create_file(&pathbuf, "0001.tests.up.sql");
         create_file(&pathbuf, "0001.tests.down.sql");
         create_file(&pathbuf, "0002.tests_second.up.sql");
-        let migrations = read_migrations_files(pathbuf.as_path());
+        let migrations = read_migration_files(pathbuf.as_path());
 
         assert_eq!(migrations.is_err(), true);
     }
@@ -211,7 +211,7 @@ mod tests {
         create_file(&pathbuf, "0001.tests.down.sql");
         create_file(&pathbuf, "0003.tests_second.up.sql");
         create_file(&pathbuf, "0003.tests_second.down.sql");
-        let migrations = read_migrations_files(pathbuf.as_path());
+        let migrations = read_migration_files(pathbuf.as_path());
 
         assert_eq!(migrations.is_err(), true);
     }

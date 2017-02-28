@@ -22,8 +22,8 @@ before_script:
   - chmod 777 migrate.db
 
 script:
-  - cargo build
-  - cargo test
+  - cd dbmigrate-lib && cargo test
+  - cd ../dbmigrate && cargo build
   - DBMIGRATE_URL=postgres://postgres@localhost/migrate cargo run status
   - DBMIGRATE_URL=mysql://travis@localhost/migrate cargo run status
   - DBMIGRATE_URL=sqlite://`pwd`/migrate.db cargo run status

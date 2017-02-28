@@ -1,8 +1,8 @@
 use std::path::Path;
 use std::time::Instant;
 
-use drivers::Driver;
-use files::{create_migration, Migrations, Direction};
+use dbmigrate_lib::drivers::Driver;
+use dbmigrate_lib::files::{create_migration, Migrations, Direction};
 use print;
 use errors::{Result};
 
@@ -30,7 +30,7 @@ macro_rules! migrate {
             }
         };
         if res.is_err() {
-            return res;
+            return res.map_err(|e| e.into());
         }
     }
 }
@@ -39,7 +39,7 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) -> Result<(
     let current_number = migration_files.keys().cloned().max().unwrap_or(0i32);
     let number = current_number + 1;
     match create_migration(path, slug, number) {
-        Err(e) => Err(e),
+        Err(e) => Err(e.into()),
         Ok(_) => {
             print::success("Migration files successfully created!");
             Ok(())
