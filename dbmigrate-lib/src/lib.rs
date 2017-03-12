@@ -7,8 +7,11 @@ extern crate tempdir;
 
 extern crate regex;
 extern crate url;
+#[cfg(feature = "postgres_support")]
 extern crate postgres as postgres_client;
+#[cfg(feature = "mysql_support")]
 extern crate mysql as mysql_client;
+#[cfg(feature = "sqlite_support")]
 extern crate rusqlite as sqlite_client;
 #[macro_use]
 extern crate error_chain;
