@@ -81,6 +81,12 @@ For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 
 ## Changelog
 
+## Lib
+
+- 0.1.1: Add features so you can only pick the database you need
+
+## CLI
+- 0.3.2: Use features
 - 0.3.1: Refactor code to create a dbmigrate-lib and use it for the dbmigrate tool
 - 0.3.0: Add dotenv support + refactor error handling + update dependencies
 - 0.2.7: Update docs to mention sqlite support
