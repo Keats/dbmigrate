@@ -22,7 +22,6 @@ features = [ "suggestions", "color" , "unstable"]
 [dependencies.dbmigrate-lib]
 version = "0.1.1"
 default-features = false
-path = "../dbmigrate-lib" # Should be able to remove this line after version 0.1.1 of dbmigrate-lib is on crates.io
 
 [features]
 default = ["postgres_support", "sqlite_support", "mysql_support"]
