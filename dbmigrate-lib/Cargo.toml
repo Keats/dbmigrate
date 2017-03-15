@@ -1,6 +1,6 @@
 [package]
 name = "dbmigrate-lib"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
@@ -12,10 +12,16 @@ keywords = ["database", "postgres", "migration", "sql", "mysql"]
 [dependencies]
 regex = "0.2"
 url = "1"
-postgres = { version = "0.14", features = ["with-native-tls"] }
-mysql = "9.0"
-rusqlite = "0.9"
+postgres = { version = "0.14", features = ["with-native-tls"], optional=true }
+mysql = { version="9.0", optional=true}
+rusqlite = { version="0.9", optional=true}
 error-chain = "0.10"
 
 [dev-dependencies]
 tempdir = "0.3.4"
+
+[features]
+default = ["postgres_support", "sqlite_support", "mysql_support"]
+postgres_support = ["postgres"]
+sqlite_support = ["rusqlite"]
+mysql_support = ["mysql"]

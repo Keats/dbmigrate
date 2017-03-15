@@ -3,8 +3,11 @@ use url::{Url};
 
 use errors::{Result, ResultExt};
 
+#[cfg(feature = "mysql_support")]
 mod mysql;
+#[cfg(feature = "postgres_support")]
 mod postgres;
+#[cfg(feature = "sqlite_support")]
 mod sqlite;
 
 
@@ -31,8 +34,11 @@ pub fn get_driver(url: &str) -> Result<Box<Driver>> {
         .chain_err(|| format!("Invalid URL: {}", url))?;
 
     match parsed_url.scheme() {
+        #[cfg(feature = "postgres_support")]
         "postgres" => postgres::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
+        #[cfg(feature = "mysql_support")]
         "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<Driver>),
+        #[cfg(feature = "sqlite_support")]
         "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<Driver>),
         _ => bail!("Invalid URL: {}", url)
     }
