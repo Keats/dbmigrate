@@ -5,9 +5,13 @@ use term;
 
 pub fn error(message: &str) {
     if let Some(mut t) = term::stderr() {
-        t.fg(term::color::BRIGHT_RED).unwrap();
-        writeln!(t, "{}", message).unwrap();
-        t.reset().unwrap();
+        match t.fg(term::color::BRIGHT_RED) {
+            Ok(_) => {
+                writeln!(t, "{}", message).unwrap();
+                t.reset().unwrap();
+            },
+            Err(_) => writeln!(t, "{}", message).unwrap()
+        };
     } else {
         writeln!(io::stderr(), "{}", message).unwrap();
     }
@@ -16,9 +20,13 @@ pub fn error(message: &str) {
 
 pub fn success(message: &str) {
     if let Some(mut t) = term::stdout() {
-        t.fg(term::color::GREEN).unwrap();
-        writeln!(t, "{}", message).unwrap();
-        t.reset().unwrap();
+        match t.fg(term::color::GREEN) {
+            Ok(_) => {
+                writeln!(t, "{}", message).unwrap();
+                t.reset().unwrap();
+            },
+            Err(_) => writeln!(t, "{}", message).unwrap()
+        };
     } else {
         println!("{}", message);
     }
