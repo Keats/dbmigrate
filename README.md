@@ -86,6 +86,7 @@ For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 - 0.1.1: Add features so you can only pick the database you need
 
 ## CLI
+- 0.3.4: Don't crash if the terminal doesn't support colours
 - 0.3.3: Don't crash if there is no terminal
 - 0.3.2: Use features
 - 0.3.1: Refactor code to create a dbmigrate-lib and use it for the dbmigrate tool
