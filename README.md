@@ -78,6 +78,12 @@ For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 ./target/release/dbmigrate --path=/home/vincent/Code/dbmigrate/examples/migrations --url=sqlite:///dbmigrate.db status 
 ```
 
+## Using a different schema
+dbmigrate will use the default schema. You can override that from your database URL, for example for Postgres:
+
+```
+--url="postgres://postgres:@127.0.0.1:5432/migrate?application_name=my_app&options=-c search_path%3Dmy_app"
+```
 
 ## Changelog
 
