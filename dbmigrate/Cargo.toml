@@ -11,8 +11,8 @@ keywords = ["database", "postgres", "migration", "sql", "mysql"]
 
 [dependencies]
 term = "0.4"
-dotenv = "0.8"
-error-chain = "0.10"
+dotenv = "0.10"
+error-chain = "0.11"
 
 [dependencies.clap]
 version = "2"
@@ -20,7 +20,8 @@ default-features = false
 features = [ "suggestions", "color" , "unstable"]
 
 [dependencies.dbmigrate-lib]
-version = "0.1.1"
+# version = "0.1.1"
+path = "../dbmigrate-lib"
 default-features = false
 
 [features]
