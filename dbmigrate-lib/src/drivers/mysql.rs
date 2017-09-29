@@ -1,5 +1,4 @@
-use mysql_client::value::from_row;
-use mysql_client::Pool;
+use mysql_client::{from_row, Pool};
 
 use super::Driver;
 use errors::{Result, ResultExt};
