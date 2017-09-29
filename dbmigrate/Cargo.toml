@@ -20,8 +20,8 @@ default-features = false
 features = [ "suggestions", "color" , "unstable"]
 
 [dependencies.dbmigrate-lib]
-# version = "0.1.1"
-path = "../dbmigrate-lib"
+version = "0.1"
+# path = "../dbmigrate-lib"
 default-features = false
 
 [features]
