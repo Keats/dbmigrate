@@ -26,7 +26,6 @@ impl Sqlcipher {
         let sqlcipher = Sqlcipher { conn: conn };
         match parsedurl.password() {
             Some(password) => {
-                println!("Password: {:?}", password);
                 sqlcipher.unlock(password)?;
                 sqlcipher.verify_cipher()?;
                 sqlcipher.ensure_migration_table_exists();
