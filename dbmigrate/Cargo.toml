@@ -4,10 +4,10 @@ version = "0.3.5"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
-description = "CLI tool to create and run database migrations. Postgres, MySQL supported."
+description = "CLI tool to create and run database migrations. Postgres, MySQL, SQLite and SQLCipher supported."
 homepage = "https://github.com/Keats/dbmigrate"
 repository = "https://github.com/Keats/dbmigrate"
-keywords = ["database", "postgres", "migration", "sql", "mysql"]
+keywords = ["database", "postgres", "migration", "sql", "mysql", "sqlite", "sqlcipher"]
 
 [dependencies]
 term = "0.4"
@@ -29,3 +29,4 @@ default = ["postgres_support", "sqlite_support", "mysql_support"]
 postgres_support = ["dbmigrate-lib/postgres_support"]
 sqlite_support = ["dbmigrate-lib/sqlite_support"]
 mysql_support = ["dbmigrate-lib/mysql_support"]
+sqlcipher_support = ["dbmigrate-lib/sqlcipher_support"]

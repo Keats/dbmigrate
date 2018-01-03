@@ -1,4 +1,4 @@
-//! CLI to manage SQL migrations for Postgres, MySQL and SQLite
+//! CLI to manage SQL migrations for Postgres, MySQL, SQLite and SQLCipher
 //!
 
 #[macro_use] extern crate clap;

@@ -9,6 +9,8 @@ mod mysql;
 mod postgres;
 #[cfg(feature = "sqlite_support")]
 mod sqlite;
+#[cfg(feature = "sqlcipher_support")]
+mod sqlcipher;
 
 
 /// The common trait that all databases need to implement in order
@@ -40,6 +42,8 @@ pub fn get_driver(url: &str) -> Result<Box<Driver>> {
         "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<Driver>),
         #[cfg(feature = "sqlite_support")]
         "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<Driver>),
+        #[cfg(feature = "sqlcipher_support")]
+        "sqlcipher" => sqlcipher::Sqlcipher::new(url).map(|d| Box::new(d) as Box<Driver>),
         _ => bail!("Invalid URL: {}", url)
     }
 }
