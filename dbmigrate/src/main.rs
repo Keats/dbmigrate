@@ -34,7 +34,7 @@ fn main() {
 fn run() -> Result<()> {
     dotenv::dotenv().ok();
 
-    let matches = clap_app!(myapp =>
+    let matches = clap_app!(dbmigrate =>
         (@setting SubcommandRequiredElseHelp)
         (version: &crate_version!()[..])
         (author: "Vincent Prouillet <vincent@wearewizards.io>")
