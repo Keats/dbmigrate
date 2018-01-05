@@ -14,7 +14,7 @@ regex = "0.2"
 url = "1"
 postgres = { version = "0.15", features = ["with-native-tls"], optional=true }
 mysql = { version="12", optional=true}
-rusqlite = { version="0.12", optional=true}
+rusqlite = { version="0.13", optional=true}
 error-chain = "0.11"
 
 [dev-dependencies]
