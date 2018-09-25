@@ -27,3 +27,4 @@ script:
   - DBMIGRATE_URL=postgres://postgres@localhost/migrate cargo run status
   - DBMIGRATE_URL=mysql://travis@localhost/migrate cargo run status
   - DBMIGRATE_URL=sqlite://`pwd`/migrate.db cargo run status
+  - DBMIGRATE_URL=sqlcipher://user:password@localhost`pwd`/migrate.sqlcipher cargo run --no-default-features --features sqlcipher_support -- status
