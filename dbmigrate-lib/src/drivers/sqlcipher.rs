@@ -5,29 +5,31 @@ use sqlcipher_client::Connection;
 use super::Driver;
 use errors::{Result, ResultExt};
 
-const SQLCIPHER_DEFAULT_CIPHER: &'static str = "AES-256-CBC";
-
 #[derive(Debug)]
 pub struct Sqlcipher {
     conn: Connection,
 }
 
 impl Sqlcipher {
+    /// Open an SQLCipher database
+    ///
+    /// This method expects a database URL in the form
+    /// sqlcipher://$USER:$PASSWORD@$HOST/$DATABASEPATH
+    ///
+    /// The USER and HOST values will not be used.
+    /// The PASSWORD will be used with the PRAGMA KEY statement.
     pub fn new(url: &str) -> Result<Sqlcipher> {
-        // Expect a URL in the form:
-        // sqlcipher://user:password@host/path/to/file.db
-        //
-        // The user and host components are not used.
-        // The password is used with the PRAGMA KEY statement.
-        let parsedurl = Url::parse(url)
+        let parsed_url = Url::parse(url)
             .chain_err(|| format!("Invalid SQLCipher URL: {}", url))?;
-        let path = parsedurl.path();
-        let conn = Connection::open(path)?;
+        let path = parsed_url.path();
+        let conn = Connection::open(path)
+            .chain_err(|| format!("Unable to open database at {}", path))?;
         let sqlcipher = Sqlcipher { conn: conn };
-        match parsedurl.password() {
+        match parsed_url.password() {
             Some(password) => {
                 sqlcipher.unlock(password)?;
-                sqlcipher.verify_cipher()?;
+                sqlcipher.verify_sqlcipher()?;
+                sqlcipher.verify_valid_key()?;
                 sqlcipher.ensure_migration_table_exists();
             }
             None => bail!("No password found in URL"),
@@ -35,40 +37,78 @@ impl Sqlcipher {
         Ok(sqlcipher)
     }
 
+    /// Unlock the SQLCipher database with the provided password
+    ///
+    /// This function uses the PRAGMA KEY
     fn unlock(&self, password: &str) -> Result<()> {
         let pragmakey = format!("PRAGMA KEY = '{}'", password);
         match self.conn.execute(&pragmakey, &[]) {
             Ok(rows) => assert!(rows == 0),
-            Err(err_) => bail!("Failed to set database key: {}", err_),
+            Err(err) => bail!("Failed to set database key: {}", err),
         };
         Ok(())
     }
 
-    fn verify_cipher(&self) -> Result<()> {
-        // This function exists to verify that the database is encrypted.  Any
-        // failure in this code should not result in private data being
-        // exposed.
-        //
-        // By default, PRAGMA CIPHER simply returns "AES-256-CBC".
-        let mut statement = self.conn.prepare("PRAGMA CIPHER")?;
+    /// Verify that the underlying library acts like SQLCipher
+    ///
+    /// This should prevent the user from continuing if the library is
+    /// accidentally linked against SQLite instead of SQLCipher.
+    fn verify_sqlcipher(&self) -> Result<()> {
+        let mut statement = self.conn.prepare(
+            "PRAGMA cipher_version")?;
         match statement.query(&[]) {
             Ok(mut rows) => {
-                let mut rowcount: usize = 0;
+                let mut row_count: usize = 0;
                 match rows.next() {
                     Some(Ok(row)) => {
-                        rowcount += 1;
+                        row_count += 1;
                         let result: String = row.get_checked(0)?;
-                        assert_eq!(SQLCIPHER_DEFAULT_CIPHER, result);
-                    }
+                        assert!(result.len() > 0);
+                    },
                     Some(Err(err)) => {
-                        bail!("Failed to retrieve the cipher: {}", err)
-                    }
-                    None => bail!("Cipher query returned no rows."),
+                        bail!("PRAGMA cipher_version returned an error: {}", err)
+                    },
+                    // Verified.
+                    None => bail!("This tool is linked against SQLite instead of SQLCipher")
                 };
-                assert!(rowcount == 1);
-            }
-            Err(err) => bail!("Failed to verify the cipher: {}", err),
+                assert!(row_count == 1);
+            },
+            Err(err) => bail!(
+                "Failed to successfully complete PRAGMA cipher_version query: {}", err),
         };
+        Ok(())
+    }
+
+    /// Verify that the provided password is valid
+    ///
+    /// This function is present to prevent sensitive data being added to a
+    /// database which is not encrypted.
+    fn verify_valid_key(&self) -> Result<()> {
+        match self.conn.prepare("SELECT count(*) FROM sqlite_master") {
+            Ok(mut statement) => {
+                match statement.query(&[]) {
+                    Ok(mut rows) => {
+                        let mut row_count: usize = 0;
+                        match rows.next() {
+                            Some(Ok(row)) => {
+                                row_count += 1;
+                                let result: i64 = row.get_checked(0)?;
+                                assert!(result >= 0);
+                            }
+                            Some(Err(err)) => {
+                                bail!("sqlite_master query returned an error: {}", err)
+                            }
+                            None => bail!("sqlite_master query returned nothing"),
+                        };
+                        assert!(row_count == 1);
+                    }
+                    Err(err) => bail!("Failed to query the sqlite_master table: {}", err),
+                };
+            },
+            Err(err) => {
+                bail!("This database may not be encrypted or may require a different password: {}", err);
+            }
+        }
         Ok(())
     }
 }

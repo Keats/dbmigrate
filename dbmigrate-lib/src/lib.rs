@@ -11,10 +11,10 @@ extern crate url;
 extern crate postgres as postgres_client;
 #[cfg(feature = "mysql_support")]
 extern crate mysql as mysql_client;
-#[cfg(feature = "sqlite_support")]
+#[cfg(any(feature = "sqlite_support", feature = "sqlcipher_support"))]
 extern crate rusqlite as sqlite_client;
 #[cfg(feature = "sqlcipher_support")]
-extern crate rusqlcipher as sqlcipher_client;
+extern crate rusqlite as sqlcipher_client;
 #[macro_use]
 extern crate error_chain;
 
