@@ -16,7 +16,9 @@ function trusty_build_sqlcipher () {
                 sudo apt-get -q install -y libssl-dev tclsh make > /dev/null
 		if [ ! -f "$BUILD_DIR"/.libs/libsqlcipher.so ];
 		then
+			pushd . > /dev/null
 			rm -rf "$BUILD_DIR" && git clone -q $SQLCIPHER_URL "$BUILD_DIR" && cd "$BUILD_DIR" && ./configure --quiet --enable-tempstore=yes --disable-tcl CFLAGS="-DSQLITE_HAS_CODEC" LDFLAGS="-lcrypto" && make > /dev/null
+			popd > /dev/null
 		fi
 		export LD_LIBRARY_PATH=$HOME/sqlcipher-for-dbmigrate/.libs
         fi
