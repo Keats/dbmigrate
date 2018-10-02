@@ -31,6 +31,7 @@ script:
   - DBMIGRATE_URL=postgres://postgres@localhost/migrate cargo run status
   - DBMIGRATE_URL=mysql://travis@localhost/migrate cargo run status
   - DBMIGRATE_URL=sqlite://`pwd`/migrate.db cargo run status
-  # On Ubuntu 14.04 (Trusty), add a locally-built version of SQLCipher to the LD_LIBRARY_PATH
-  - source ../.travis-trusty-sqlcipher-helper.bash
-  - DBMIGRATE_URL=sqlcipher://user:password@localhost`pwd`/migrate.sqlcipher cargo run --no-default-features --features sqlcipher_support -- status
+  # Run the SQLCipher test with a helper script.  TravisCI does not preserve
+  # environment variables across these script lines, so we cannot use a
+  # separate script to set the necessary variables.
+  - bash ../.travis-sqlcipher-cargo-run-status.bash
