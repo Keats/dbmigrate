@@ -41,11 +41,9 @@ impl Sqlcipher {
     ///
     /// This function uses the PRAGMA KEY
     fn unlock(&self, password: &str) -> Result<()> {
-        let pragmakey = format!("PRAGMA KEY = '{}'", password);
-        match self.conn.execute(&pragmakey, &[]) {
-            Ok(rows) => assert!(rows == 0),
-            Err(err) => bail!("Failed to set database key: {}", err),
-        };
+        let mut statement = self.conn.prepare(&format!("PRAGMA KEY = '{}'", password))?;
+        let results = statement.query_map(&[], |row| row.get::<usize, String>(0))?;
+        assert!(results.count() == 0);
         Ok(())
     }
 
