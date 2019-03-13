@@ -1,5 +1,5 @@
 use postgres_client::{Connection, TlsMode};
-use postgres_client::tls::native_tls::NativeTls;
+use postgres_native_tls::NativeTls;
 use url::Url;
 
 use super::Driver;
