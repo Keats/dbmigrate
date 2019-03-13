@@ -10,7 +10,7 @@ repository = "https://github.com/Keats/dbmigrate"
 keywords = ["database", "postgres", "migration", "sql", "mysql"]
 
 [dependencies]
-regex = "0.2"
+regex = "1"
 url = "1"
 postgres-native-tls = { version = "0.1.0", optional=true }
 postgres = { version = "0.15", optional=true }

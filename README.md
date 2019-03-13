@@ -75,7 +75,7 @@ MySQL:
 
 For Sqlite I have a Sqlite db named `dbmigrate.db` in the repo (gitignored):
 ```bash
-./target/release/dbmigrate --path=/home/vincent/Code/dbmigrate/examples/migrations --url=sqlite:///dbmigrate.db status 
+./target/release/dbmigrate --path=/home/vincent/Code/dbmigrate/examples/migrations --url=sqlite:///dbmigrate.db status
 ```
 
 ## Using a different schema
@@ -89,6 +89,7 @@ dbmigrate will use the default schema. You can override that from your database 
 
 ## Lib
 
+- 0.1.4: Use `postgres-native-tls`
 - 0.1.1: Add features so you can only pick the database you need
 
 ## CLI
