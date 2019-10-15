@@ -7,8 +7,10 @@ use errors::{Result, ResultExt};
 mod mysql;
 #[cfg(feature = "postgres_support")]
 mod postgres;
-#[cfg(feature = "sqlite_support")]
+#[cfg(any(feature = "sqlite_support", feature = "sqlcipher_support"))]
 mod sqlite;
+#[cfg(feature = "sqlcipher_support")]
+mod sqlcipher;
 
 
 /// The common trait that all databases need to implement in order
@@ -38,8 +40,10 @@ pub fn get_driver(url: &str) -> Result<Box<Driver>> {
         "postgres" => postgres::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
         #[cfg(feature = "mysql_support")]
         "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<Driver>),
-        #[cfg(feature = "sqlite_support")]
+        #[cfg(any(feature = "sqlite_support", feature = "sqlcipher_support"))]
         "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<Driver>),
+        #[cfg(feature = "sqlcipher_support")]
+        "sqlcipher" => sqlcipher::Sqlcipher::new(url).map(|d| Box::new(d) as Box<Driver>),
         _ => bail!("Invalid URL: {}", url)
     }
 }

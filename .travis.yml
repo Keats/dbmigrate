@@ -10,6 +10,10 @@ env:
 notifications:
   email: false
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y libsqlcipher-dev
+
 services:
   - mysql
   - postgresql
@@ -27,3 +31,7 @@ script:
   - DBMIGRATE_URL=postgres://postgres@localhost/migrate cargo run status
   - DBMIGRATE_URL=mysql://travis@localhost/migrate cargo run status
   - DBMIGRATE_URL=sqlite://`pwd`/migrate.db cargo run status
+  # Run the SQLCipher test with a helper script.  TravisCI does not preserve
+  # environment variables across these script lines, so we cannot use a
+  # separate script to set the necessary variables.
+  - bash ../.travis-sqlcipher-cargo-run-status.bash
