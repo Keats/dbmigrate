@@ -11,6 +11,8 @@ extern crate url;
 extern crate postgres as postgres_client;
 #[cfg(feature = "postgres_support")]
 extern crate postgres_native_tls;
+#[cfg(feature = "postgres_support")]
+extern crate native_tls;
 #[cfg(feature = "mysql_support")]
 extern crate mysql as mysql_client;
 #[cfg(feature = "sqlite_support")]

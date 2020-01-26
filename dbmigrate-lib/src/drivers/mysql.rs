@@ -12,7 +12,7 @@ pub struct Mysql {
 impl Mysql {
     pub fn new(url: &str) -> Result<Mysql> {
         let pool = Pool::new(url)?;
-        let mysql = Mysql { pool: pool };
+        let mut mysql = Mysql { pool: pool };
         mysql.ensure_migration_table_exists();
 
         Ok(mysql)
@@ -21,7 +21,7 @@ impl Mysql {
 
 
 impl Driver for Mysql {
-    fn ensure_migration_table_exists(&self) {
+    fn ensure_migration_table_exists(&mut self) {
         let mut conn = self.pool.get_conn().unwrap();
         conn.query("
             CREATE TABLE IF NOT EXISTS __dbmigrate_table(id INTEGER, current INTEGER);
@@ -31,11 +31,11 @@ impl Driver for Mysql {
         ").unwrap();
     }
 
-    fn remove_migration_table(&self) {
+    fn remove_migration_table(&mut self) {
         self.pool.prep_exec("DROP TABLE __dbmigrate_table;", ()).unwrap();
     }
 
-    fn get_current_number(&self) -> i32 {
+    fn get_current_number(&mut self) -> i32 {
         let mut result = self.pool.prep_exec("
             SELECT current FROM __dbmigrate_table WHERE id = 1;
         ", ()).unwrap();
@@ -44,14 +44,14 @@ impl Driver for Mysql {
         from_row::<i32>(row.unwrap())
     }
 
-    fn set_current_number(&self, number: i32) {
+    fn set_current_number(&mut self, number: i32) {
         self.pool.prep_exec(
             "UPDATE __dbmigrate_table SET current = ? WHERE id = 1;",
             (&number, )
         ).unwrap();
     }
 
-    fn migrate(&self, migration: String, number: i32) -> Result<()> {
+    fn migrate(&mut self, migration: String, number: i32) -> Result<()> {
         let mut conn = self.pool.get_conn()?;
         conn.query(migration).chain_err(|| "Migration failed")?;
         self.set_current_number(number);
