@@ -4,12 +4,14 @@ use super::Driver;
 use errors::{Result, ResultExt};
 
 
+/// The SQLite driver
 #[derive(Debug)]
 pub struct Sqlite {
     conn: Connection
 }
 
 impl Sqlite {
+    /// Create SQLite driver
     pub fn new(url: &str) -> Result<Sqlite> {
         // the replace is probably wrong
         let conn = Connection::open(url.replace("sqlite:/", ""))?;

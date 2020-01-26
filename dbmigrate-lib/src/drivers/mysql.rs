@@ -4,12 +4,14 @@ use super::Driver;
 use errors::{Result, ResultExt};
 
 
+/// The MySQL driver
 #[derive(Debug)]
 pub struct Mysql {
     pool: Pool
 }
 
 impl Mysql {
+    /// Create MySQL driver
     pub fn new(url: &str) -> Result<Mysql> {
         let pool = Pool::new(url)?;
         let mut mysql = Mysql { pool: pool };

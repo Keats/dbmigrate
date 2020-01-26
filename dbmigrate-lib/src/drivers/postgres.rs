@@ -7,17 +7,23 @@ use postgres_native_tls::{MakeTlsConnector};
 use super::Driver;
 use errors::{Result, ResultExt};
 
+/// The PostgreSQL driver
 //#[derive(Debug)]
 pub struct Postgres {
     client: Client
 }
 
 impl Postgres {
+    /// Create PostgreSQL driver
     pub fn new(url: &str) -> Result<Postgres> {
         let config = Config::from_str(url)?;
         let connector = TlsConnector::new().unwrap();
         let connector = MakeTlsConnector::new(connector);
         let client = config.connect(connector)?;
+        Postgres::from_client(client)
+    }
+    /// Create PostgreSQL driver using an existing client
+    pub fn from_client(client: Client) -> Result<Postgres> {
         let mut pg = Postgres { client: client };
         pg.ensure_migration_table_exists();
         Ok(pg)

@@ -26,6 +26,13 @@ mod drivers;
 pub mod errors;
 
 pub use drivers::{get_driver, Driver};
+#[cfg(feature = "postgres_support")]
+pub use drivers::postgres::Postgres as PostgresDriver;
+#[cfg(feature = "mysql_support")]
+pub use drivers::mysql::Mysql as MysqlDriver;
+#[cfg(feature = "sqlite_support")]
+pub use drivers::sqlite::Sqlite as SqliteDriver;
+
 pub use files::{
     create_migration,
     read_migration_files,

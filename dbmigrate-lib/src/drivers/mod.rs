@@ -4,11 +4,11 @@ use url::{Url};
 use errors::{Result, ResultExt};
 
 #[cfg(feature = "mysql_support")]
-mod mysql;
+pub mod mysql;
 #[cfg(feature = "postgres_support")]
-mod postgres;
+pub mod postgres;
 #[cfg(feature = "sqlite_support")]
-mod sqlite;
+pub mod sqlite;
 
 
 /// The common trait that all databases need to implement in order
