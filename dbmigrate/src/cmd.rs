@@ -47,7 +47,7 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) -> Result<(
 }
 
 
-pub fn status(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
+pub fn status(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
     if current == 0 {
         print::success("No migration has been ran");
@@ -64,7 +64,7 @@ pub fn status(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
 }
 
 
-pub fn up(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
+pub fn up(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
     let max = migration_files.keys().max().unwrap();
     if current == *max {
@@ -81,7 +81,7 @@ pub fn up(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
     Ok(())
 }
 
-pub fn down(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
+pub fn down(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
     if current == 0 {
         print::success("No down migrations to run");
@@ -99,7 +99,7 @@ pub fn down(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
     Ok(())
 }
 
-pub fn redo(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
+pub fn redo(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
     if current == 0 {
         print::success("No migration to redo");
@@ -116,7 +116,7 @@ pub fn redo(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
 }
 
 
-pub fn revert(driver: Box<Driver>, migration_files: &Migrations) -> Result<()> {
+pub fn revert(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
     if current == 0 {
         print::success("No migration to revert");
