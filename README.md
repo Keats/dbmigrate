@@ -89,6 +89,7 @@ dbmigrate will use the default schema. You can override that from your database 
 
 ## Lib
 
+- 0.1.5: update postgres dependencies
 - 0.1.4: Use `postgres-native-tls`
 - 0.1.1: Add features so you can only pick the database you need
 
