@@ -1,12 +1,12 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
-use std::iter::{repeat};
+use std::iter::repeat;
 use std::path::Path;
-use std::collections::{BTreeMap};
 
-use regex::Regex;
 use errors::{Result, ResultExt};
+use regex::Regex;
 
 /// A migration direction, can be Up or Down
 #[derive(Debug, PartialEq)]
@@ -14,14 +14,14 @@ pub enum Direction {
     /// Self-explanatory
     Up,
     /// Self-explanatory
-    Down
+    Down,
 }
 
 impl ToString for Direction {
     fn to_string(&self) -> String {
         match *self {
             Direction::Up => "up".to_owned(),
-            Direction::Down => "down".to_owned()
+            Direction::Down => "down".to_owned(),
         }
     }
 }
@@ -38,7 +38,7 @@ pub struct MigrationFile {
     /// Filename
     pub filename: String,
     /// Actual migration name (filename with number removed)
-    pub name: String
+    pub name: String,
 }
 
 /// A migration has 2 files: one up and one down
@@ -47,7 +47,7 @@ pub struct Migration {
     /// The Up file
     pub up: Option<MigrationFile>,
     /// The Down file
-    pub down: Option<MigrationFile>
+    pub down: Option<MigrationFile>,
 }
 
 /// Simple way to hold migrations indexed by their number
@@ -59,9 +59,9 @@ impl MigrationFile {
         MigrationFile {
             content: None,
             filename: filename.to_owned(),
-            number: number,
+            number,
             name: name.to_owned(),
-            direction: direction
+            direction,
         }
     }
 }
@@ -75,9 +75,11 @@ pub fn create_migration(path: &Path, slug: &str, number: i32) -> Result<()> {
     parse_filename(&filename_down)?;
 
     println!("Creating {}", filename_up);
-    File::create(path.join(filename_up.clone())).chain_err(|| format!("Failed to create {}", filename_up))?;
+    File::create(path.join(filename_up.clone()))
+        .chain_err(|| format!("Failed to create {}", filename_up))?;
     println!("Creating {}", filename_down);
-    File::create(path.join(filename_down.clone())).chain_err(|| format!("Failed to create {}", filename_down))?;
+    File::create(path.join(filename_down.clone()))
+        .chain_err(|| format!("Failed to create {}", filename_down))?;
 
     Ok(())
 }
@@ -101,22 +103,38 @@ pub fn read_migration_files(path: &Path) -> Result<Migrations> {
             Ok(info) => info,
             Err(_) => continue,
         };
-        let mut file = File::open(entry.path())
-            .chain_err(|| format!("Failed to open {:?}", entry.path()))?;
+        let mut file =
+            File::open(entry.path()).chain_err(|| format!("Failed to open {:?}", entry.path()))?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
 
-        let migration_file = MigrationFile { content: Some(content), ..info };
+        let migration_file = MigrationFile {
+            content: Some(content),
+            ..info
+        };
         let migration_number = migration_file.number;
         let mut migration = match btreemap.remove(&migration_number) {
-            None => Migration { up: None, down: None },
-            Some(m) => m
+            None => Migration {
+                up: None,
+                down: None,
+            },
+            Some(m) => m,
         };
-        if migration_file.direction == Direction::Up {
-            migration.up = Some(migration_file);
-        } else {
-            migration.down = Some(migration_file);
-        }
+        match migration_file.direction {
+            Direction::Up if migration.up.is_none() => {
+                migration.up = Some(migration_file);
+            }
+            Direction::Down if migration.down.is_none() => {
+                migration.down = Some(migration_file);
+            }
+            _ => {
+                bail!(
+                    "There are multiple migrations with number {}",
+                    migration_number
+                )
+            }
+        };
+
         btreemap.insert(migration_number, migration);
     }
 
@@ -137,17 +155,22 @@ pub fn read_migration_files(path: &Path) -> Result<Migrations> {
 /// Gets a filename and check whether it's a valid format.
 /// If it is, grabs all the info from it
 fn parse_filename(filename: &str) -> Result<MigrationFile> {
-    let re = Regex::new(
-        r"^(?P<number>[0-9]{4})\.(?P<name>[_0-9a-zA-Z]*)\.(?P<direction>up|down)\.sql$"
-    ).unwrap();
+    let re =
+        Regex::new(r"^(?P<number>[0-9]{4})\.(?P<name>[_0-9a-zA-Z]*)\.(?P<direction>up|down)\.sql$")
+            .unwrap();
 
     let caps = match re.captures(filename) {
         None => bail!("File {} has an invalid filename", filename),
-        Some(c) => c
+        Some(c) => c,
     };
 
     // Unwrapping below should be safe (in theory)
-    let number = caps.name("number").unwrap().as_str().parse::<i32>().unwrap();
+    let number = caps
+        .name("number")
+        .unwrap()
+        .as_str()
+        .parse::<i32>()
+        .unwrap();
     let name = caps.name("name").unwrap().as_str();
     let direction = if caps.name("direction").unwrap().as_str() == "up" {
         Direction::Up
@@ -160,11 +183,11 @@ fn parse_filename(filename: &str) -> Result<MigrationFile> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_filename, read_migration_files, Direction, get_filename};
-    use tempdir::TempDir;
-    use std::path::{PathBuf};
-    use std::io::prelude::*;
+    use super::{get_filename, parse_filename, read_migration_files, Direction};
     use std::fs::File;
+    use std::io::prelude::*;
+    use std::path::PathBuf;
+    use tempdir::TempDir;
 
     fn create_file(path: &PathBuf, filename: &str) {
         let mut new_path = path.clone();
@@ -227,5 +250,34 @@ mod tests {
         let migrations = read_migration_files(pathbuf.as_path());
 
         assert_eq!(migrations.is_err(), true);
+    }
+
+    #[test]
+    fn test_two_migrations_same_number() {
+        let tests: &[&[&str]] = &[
+            // Extra up migration
+            &["0001.a.up.sql", "0001.a.down.sql", "0001.b.up.sql"],
+            // Extra down migration
+            &["0001.a.up.sql", "0001.a.down.sql", "0001.b.down.sql"],
+            // Extra up and down migrations
+            &[
+                "0001.a.up.sql",
+                "0001.a.down.sql",
+                "0001.b.up.sql",
+                "0001.b.down.sql",
+            ],
+        ];
+
+        for files in tests {
+            let pathbuf = TempDir::new("migrations").unwrap().into_path();
+
+            for file in files.iter() {
+                create_file(&pathbuf, file);
+            }
+
+            let migrations = read_migration_files(pathbuf.as_path());
+
+            assert_eq!(migrations.is_err(), true);
+        }
     }
 }
