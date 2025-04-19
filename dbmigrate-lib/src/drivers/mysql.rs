@@ -1,7 +1,7 @@
 use mysql_client::{from_row, Pool};
 
 use super::Driver;
-use errors::{Result, ResultExt};
+use crate::errors::{Result, ResultExt};
 
 /// The MySQL driver
 #[derive(Debug)]

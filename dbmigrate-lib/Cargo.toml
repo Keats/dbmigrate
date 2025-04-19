@@ -8,6 +8,7 @@ description = "Library to run database migrations. Postgres, MySQL, Sqlite suppo
 homepage = "https://github.com/Keats/dbmigrate"
 repository = "https://github.com/Keats/dbmigrate"
 keywords = ["database", "postgres", "migration", "sql", "mysql"]
+edition = "2024"
 
 [dependencies]
 regex = "1"

@@ -5,7 +5,7 @@ use std::io::Read;
 use std::iter::repeat;
 use std::path::Path;
 
-use errors::{Result, ResultExt};
+use crate::errors::{Result, ResultExt};
 use regex::Regex;
 
 /// A migration direction, can be Up or Down
