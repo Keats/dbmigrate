@@ -1,23 +1,24 @@
 //! CLI to manage SQL migrations for Postgres, MySQL and SQLite
 //!
 
-#[macro_use] extern crate clap;
-#[macro_use] extern crate error_chain;
+#[macro_use]
+extern crate clap;
+#[macro_use]
+extern crate error_chain;
 extern crate dbmigrate_lib;
-extern crate term;
 extern crate dotenv;
+extern crate term;
 
-use std::path::Path;
 use std::env;
+use std::path::Path;
 use std::time::Instant;
 
 mod cmd;
-mod print;
 mod errors;
+mod print;
 
+use dbmigrate_lib::{get_driver, read_migration_files};
 use errors::{Result, ResultExt};
-use dbmigrate_lib::{read_migration_files, get_driver};
-
 
 fn main() {
     if let Err(ref e) = run() {
@@ -29,7 +30,6 @@ fn main() {
         ::std::process::exit(1);
     }
 }
-
 
 fn run() -> Result<()> {
     dotenv::dotenv().ok();
@@ -69,9 +69,13 @@ Using arguments will override the environment variables.
         )
     ).get_matches();
 
-    let path_value = match matches.value_of("path").map(|s| s.into()).or(env::var("DBMIGRATE_PATH").ok()) {
-      Some(u) => u,
-      None => bail!("No migration path was provided in the environment or via a command arg.")
+    let path_value = match matches
+        .value_of("path")
+        .map(|s| s.into())
+        .or(env::var("DBMIGRATE_PATH").ok())
+    {
+        Some(u) => u,
+        None => bail!("No migration path was provided in the environment or via a command arg."),
     };
     let path = Path::new(&path_value);
 
@@ -79,16 +83,24 @@ Using arguments will override the environment variables.
 
     if let Some("create") = matches.subcommand_name() {
         // Should be safe unwraps
-        let slug = matches.subcommand_matches("create").unwrap().value_of("slug").unwrap();
+        let slug = matches
+            .subcommand_matches("create")
+            .unwrap()
+            .value_of("slug")
+            .unwrap();
         match cmd::create(&migration_files, path, slug) {
             Ok(_) => std::process::exit(0),
-            Err(e) => return Err(e)
+            Err(e) => return Err(e),
         }
     }
 
-    let url = match matches.value_of("url").map(|s| s.into()).or(env::var("DBMIGRATE_URL").ok()) {
-      Some(u) => u,
-      None => bail!("No database url was provided in the environment or via a command arg.")
+    let url = match matches
+        .value_of("url")
+        .map(|s| s.into())
+        .or(env::var("DBMIGRATE_URL").ok())
+    {
+        Some(u) => u,
+        None => bail!("No database url was provided in the environment or via a command arg."),
     };
     let driver = get_driver(&url).chain_err(|| "Failed to get DB connection")?;
 

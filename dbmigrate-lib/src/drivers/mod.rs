@@ -1,5 +1,5 @@
 ///! Driver interface and implementations
-use url::{Url};
+use url::Url;
 
 use errors::{Result, ResultExt};
 
@@ -9,7 +9,6 @@ pub mod mysql;
 pub mod postgres;
 #[cfg(feature = "sqlite_support")]
 pub mod sqlite;
-
 
 /// The common trait that all databases need to implement in order
 /// for migrations to work
@@ -30,8 +29,7 @@ pub trait Driver {
 
 /// Returns a driver instance depending on url
 pub fn get_driver(url: &str) -> Result<Box<Driver>> {
-    let parsed_url = Url::parse(url)
-        .chain_err(|| format!("Invalid URL: {}", url))?;
+    let parsed_url = Url::parse(url).chain_err(|| format!("Invalid URL: {}", url))?;
 
     match parsed_url.scheme() {
         #[cfg(feature = "postgres_support")]
@@ -40,7 +38,6 @@ pub fn get_driver(url: &str) -> Result<Box<Driver>> {
         "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<Driver>),
         #[cfg(feature = "sqlite_support")]
         "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<Driver>),
-        _ => bail!("Invalid URL: {}", url)
+        _ => bail!("Invalid URL: {}", url),
     }
 }
-
