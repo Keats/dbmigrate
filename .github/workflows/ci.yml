@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: ["*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check
+        run: cargo check --all
+
+      - name: Clippy
+        run: cargo clippy --all
+
+      - name: Format
+        run: cargo fmt --all --check
+
+
+      - name: Test
+        run: cargo test --all

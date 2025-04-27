@@ -1,24 +1,29 @@
 use std::path::Path;
 use std::time::Instant;
 
-use dbmigrate_lib::{Driver, create_migration, Migrations, Direction};
+use dbmigrate_lib::{create_migration, Direction, Driver, Migrations};
+use errors::Result;
 use print;
-use errors::{Result};
-
 
 // Does the whole migration thingy, along with timing and handling errors
 macro_rules! migrate {
     ($driver: ident, $mig_file: ident) => {
         println!(
             "Running {} migration #{}: {}",
-            $mig_file.direction.to_string(), $mig_file.number, $mig_file.name
+            $mig_file.direction.to_string(),
+            $mig_file.number,
+            $mig_file.name
         );
         let res = {
             let start = Instant::now();
 
             match $driver.migrate(
                 $mig_file.content.clone().unwrap(),
-                if $mig_file.direction == Direction::Up { $mig_file.number } else { $mig_file.number - 1}
+                if $mig_file.direction == Direction::Up {
+                    $mig_file.number
+                } else {
+                    $mig_file.number - 1
+                },
             ) {
                 Err(e) => Err(e),
                 Ok(_) => {
@@ -31,7 +36,7 @@ macro_rules! migrate {
         if res.is_err() {
             return res.map_err(|e| e.into());
         }
-    }
+    };
 }
 
 pub fn create(migration_files: &Migrations, path: &Path, slug: &str) -> Result<()> {
@@ -46,7 +51,6 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) -> Result<(
     }
 }
 
-
 pub fn status(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
     if current == 0 {
@@ -55,14 +59,16 @@ pub fn status(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Resu
     for (number, migration) in migration_files.iter() {
         let mig_file = migration.up.as_ref().unwrap();
         if number == &current {
-            print::success(&format!("{} - {} (current)", mig_file.number, mig_file.name));
+            print::success(&format!(
+                "{} - {} (current)",
+                mig_file.number, mig_file.name
+            ));
         } else {
             println!("{} - {}", mig_file.number, mig_file.name);
         }
     }
     Ok(())
 }
-
 
 pub fn up(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();
@@ -88,7 +94,11 @@ pub fn down(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result
         return Ok(());
     }
 
-    let mut numbers: Vec<i32> = migration_files.keys().cloned().filter(|i| i <= &current).collect();
+    let mut numbers: Vec<i32> = migration_files
+        .keys()
+        .cloned()
+        .filter(|i| i <= &current)
+        .collect();
     numbers.sort_by(|a, b| b.cmp(a));
 
     for number in numbers {
@@ -114,7 +124,6 @@ pub fn redo(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result
     migrate!(driver, up_file);
     Ok(())
 }
-
 
 pub fn revert(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
     let current = driver.get_current_number();

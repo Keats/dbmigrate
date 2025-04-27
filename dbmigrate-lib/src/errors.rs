@@ -1,7 +1,7 @@
-#[cfg(feature = "postgres_support")]
-use postgres_client;
 #[cfg(feature = "mysql_support")]
 use mysql_client;
+#[cfg(feature = "postgres_support")]
+use postgres_client;
 #[cfg(feature = "sqlite_support")]
 use sqlite_client;
 

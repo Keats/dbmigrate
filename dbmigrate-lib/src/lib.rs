@@ -5,39 +5,34 @@
 #[cfg(test)]
 extern crate tempdir;
 
-extern crate regex;
-extern crate url;
+#[cfg(feature = "mysql_support")]
+extern crate mysql as mysql_client;
+#[cfg(feature = "postgres_support")]
+extern crate native_tls;
 #[cfg(feature = "postgres_support")]
 extern crate postgres as postgres_client;
 #[cfg(feature = "postgres_support")]
 extern crate postgres_native_tls;
-#[cfg(feature = "postgres_support")]
-extern crate native_tls;
-#[cfg(feature = "mysql_support")]
-extern crate mysql as mysql_client;
+extern crate regex;
 #[cfg(feature = "sqlite_support")]
 extern crate rusqlite as sqlite_client;
+extern crate url;
 #[macro_use]
 extern crate error_chain;
 
-mod files;
 mod drivers;
 /// All possible errors
 pub mod errors;
+mod files;
 
-pub use drivers::{get_driver, Driver};
-#[cfg(feature = "postgres_support")]
-pub use drivers::postgres::Postgres as PostgresDriver;
 #[cfg(feature = "mysql_support")]
 pub use drivers::mysql::Mysql as MysqlDriver;
+#[cfg(feature = "postgres_support")]
+pub use drivers::postgres::Postgres as PostgresDriver;
 #[cfg(feature = "sqlite_support")]
 pub use drivers::sqlite::Sqlite as SqliteDriver;
+pub use drivers::{get_driver, Driver};
 
 pub use files::{
-    create_migration,
-    read_migration_files,
-    MigrationFile,
-    Migration,
-    Migrations,
-    Direction,
+    create_migration, read_migration_files, Direction, Migration, MigrationFile, Migrations,
 };

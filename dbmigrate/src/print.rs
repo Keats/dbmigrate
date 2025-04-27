@@ -9,14 +9,13 @@ pub fn error(message: &str) {
             Ok(_) => {
                 writeln!(t, "{}", message).unwrap();
                 t.reset().unwrap();
-            },
-            Err(_) => writeln!(t, "{}", message).unwrap()
+            }
+            Err(_) => writeln!(t, "{}", message).unwrap(),
         };
     } else {
         writeln!(io::stderr(), "{}", message).unwrap();
     }
 }
-
 
 pub fn success(message: &str) {
     if let Some(mut t) = term::stdout() {
@@ -24,8 +23,8 @@ pub fn success(message: &str) {
             Ok(_) => {
                 writeln!(t, "{}", message).unwrap();
                 t.reset().unwrap();
-            },
-            Err(_) => writeln!(t, "{}", message).unwrap()
+            }
+            Err(_) => writeln!(t, "{}", message).unwrap(),
         };
     } else {
         println!("{}", message);
