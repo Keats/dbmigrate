@@ -1,4 +1,4 @@
-use mysql_client::{from_row, Pool};
+use mysql_client::{Pool, from_row};
 
 use super::Driver;
 use crate::errors::{Result, ResultExt};
