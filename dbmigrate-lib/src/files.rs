@@ -5,7 +5,7 @@ use std::io::Read;
 use std::iter::repeat;
 use std::path::Path;
 
-use errors::{Result, ResultExt};
+use crate::errors::{Result, ResultExt};
 use regex::Regex;
 
 /// A migration direction, can be Up or Down
@@ -183,7 +183,7 @@ fn parse_filename(filename: &str) -> Result<MigrationFile> {
 
 #[cfg(test)]
 mod tests {
-    use super::{get_filename, parse_filename, read_migration_files, Direction};
+    use super::{Direction, get_filename, parse_filename, read_migration_files};
     use std::fs::File;
     use std::io::prelude::*;
     use std::path::PathBuf;

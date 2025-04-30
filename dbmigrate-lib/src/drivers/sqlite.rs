@@ -1,7 +1,7 @@
 use sqlite_client::Connection;
 
 use super::Driver;
-use errors::{Result, ResultExt};
+use crate::errors::{Result, ResultExt};
 
 /// The SQLite driver
 #[derive(Debug)]

@@ -1,7 +1,7 @@
 ///! Driver interface and implementations
 use url::Url;
 
-use errors::{Result, ResultExt};
+use crate::errors::{Result, ResultExt};
 
 #[cfg(feature = "mysql_support")]
 pub mod mysql;
@@ -28,16 +28,16 @@ pub trait Driver {
 }
 
 /// Returns a driver instance depending on url
-pub fn get_driver(url: &str) -> Result<Box<Driver>> {
+pub fn get_driver(url: &str) -> Result<Box<dyn Driver>> {
     let parsed_url = Url::parse(url).chain_err(|| format!("Invalid URL: {}", url))?;
 
     match parsed_url.scheme() {
         #[cfg(feature = "postgres_support")]
-        "postgres" => postgres::Postgres::new(url).map(|d| Box::new(d) as Box<Driver>),
+        "postgres" => postgres::Postgres::new(url).map(|d| Box::new(d) as Box<dyn Driver>),
         #[cfg(feature = "mysql_support")]
-        "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<Driver>),
+        "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<dyn Driver>),
         #[cfg(feature = "sqlite_support")]
-        "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<Driver>),
+        "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<dyn Driver>),
         _ => bail!("Invalid URL: {}", url),
     }
 }

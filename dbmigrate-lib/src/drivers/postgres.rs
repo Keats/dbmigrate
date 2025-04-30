@@ -5,7 +5,7 @@ use postgres_client::{Client, Config};
 use postgres_native_tls::MakeTlsConnector;
 
 use super::Driver;
-use errors::{Result, ResultExt};
+use crate::errors::{Result, ResultExt};
 
 /// The PostgreSQL driver
 //#[derive(Debug)]

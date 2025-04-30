@@ -31,8 +31,8 @@ pub use drivers::mysql::Mysql as MysqlDriver;
 pub use drivers::postgres::Postgres as PostgresDriver;
 #[cfg(feature = "sqlite_support")]
 pub use drivers::sqlite::Sqlite as SqliteDriver;
-pub use drivers::{get_driver, Driver};
+pub use drivers::{Driver, get_driver};
 
 pub use files::{
-    create_migration, read_migration_files, Direction, Migration, MigrationFile, Migrations,
+    Direction, Migration, MigrationFile, Migrations, create_migration, read_migration_files,
 };
