@@ -16,6 +16,10 @@ extern crate postgres_native_tls;
 extern crate regex;
 #[cfg(feature = "sqlite_support")]
 extern crate rusqlite as sqlite_client;
+#[cfg(feature = "surreal_support")]
+extern crate surrealdb as surreal_client;
+#[cfg(feature = "surreal_support")]
+extern crate tokio;
 extern crate url;
 #[macro_use]
 extern crate error_chain;

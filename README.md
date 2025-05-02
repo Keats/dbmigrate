@@ -11,6 +11,7 @@ A tool to create and manage SQL migrations.
 - Postgres
 - MySQL
 - Sqlite
+- SurrealDB
 
 ## Usage
 
