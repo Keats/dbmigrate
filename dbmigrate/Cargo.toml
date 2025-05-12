@@ -21,7 +21,7 @@ features = [ "suggestions", "color" , "unstable"]
 
 [dependencies.dbmigrate-lib]
 version = "0.2"
-# path = "../dbmigrate-lib"
+ path = "../dbmigrate-lib"
 default-features = false
 
 [features]
@@ -29,3 +29,4 @@ default = ["postgres_support", "sqlite_support", "mysql_support"]
 postgres_support = ["dbmigrate-lib/postgres_support"]
 sqlite_support = ["dbmigrate-lib/sqlite_support"]
 mysql_support = ["dbmigrate-lib/mysql_support"]
+surreal_support = ["dbmigrate-lib/surreal_support"]
