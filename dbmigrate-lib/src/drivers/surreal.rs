@@ -7,6 +7,7 @@ use super::Driver;
 use crate::errors::{Result, ResultExt};
 
 /// The SurrealDB driver
+#[derive(Debug)]
 pub struct Surrealdb {
     client: Surreal<Client>,
     runtime: Runtime,
@@ -15,24 +16,24 @@ pub struct Surrealdb {
 impl Surrealdb {
     /// Create SurrealDB driver
     pub fn new(url: &str) -> Result<Surrealdb> {
-        let runtime = Runtime::new().unwrap();
+        let runtime = Runtime::new().chain_err(|| format!("Tokio runtime failed to start: {}", url))?;
 
-        let parsed_url = Url::parse(url).expect(&format!("Invalid SurrealDB URL: {}", url));
+        let parsed_url = Url::parse(url).chain_err(|| format!("Invalid SurrealDB URL: {}", url))?;
 
         let host = parsed_url
             .host_str()
-            .expect(&format!("No host in URL: {}", url));
+            .ok_or_else(|| format!("No host in URL: {}", url))?;
 
         let port = parsed_url
             .port()
-            .expect(&format!("No port in URL: {}", url));
+            .ok_or_else(|| format!("No port in URL: {}", url))?;
 
         let endpoint = format!("{}:{}", host, port);
 
         let username = parsed_url.username();
         let password = parsed_url
             .password()
-            .expect(&format!("No password in URL: {}", url));
+            .ok_or_else(|| format!("No password in URL: {}", url))?;
 
         let path_segments: Vec<&str> = parsed_url
             .path()
@@ -63,11 +64,11 @@ impl Surrealdb {
                         database,
                     })
                     .await
-                    .expect("Failed to authenticate in SurrealDB");
+                    .chain_err(|| "Failed to authenticate in SurrealDB")?;
 
                 Ok::<_, crate::errors::Error>(client)
             })
-            .expect("Failed to create SurrealDB client");
+            .chain_err(|| "Failed to create SurrealDB client")?;
 
         let mut surrealdb = Surrealdb { client, runtime };
 
