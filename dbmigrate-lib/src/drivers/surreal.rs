@@ -16,7 +16,8 @@ pub struct Surrealdb {
 impl Surrealdb {
     /// Create SurrealDB driver
     pub fn new(url: &str) -> Result<Surrealdb> {
-        let runtime = Runtime::new().chain_err(|| format!("Tokio runtime failed to start: {}", url))?;
+        let runtime =
+            Runtime::new().chain_err(|| format!("Tokio runtime failed to start: {}", url))?;
 
         let parsed_url = Url::parse(url).chain_err(|| format!("Invalid SurrealDB URL: {}", url))?;
 
