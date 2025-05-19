@@ -9,6 +9,8 @@ pub mod mysql;
 pub mod postgres;
 #[cfg(feature = "sqlite_support")]
 pub mod sqlite;
+#[cfg(feature = "surreal_support")]
+pub mod surreal;
 
 /// The common trait that all databases need to implement in order
 /// for migrations to work
@@ -38,6 +40,8 @@ pub fn get_driver(url: &str) -> Result<Box<dyn Driver>> {
         "mysql" => mysql::Mysql::new(url).map(|d| Box::new(d) as Box<dyn Driver>),
         #[cfg(feature = "sqlite_support")]
         "sqlite" => sqlite::Sqlite::new(url).map(|d| Box::new(d) as Box<dyn Driver>),
+        #[cfg(feature = "surreal_support")]
+        "surreal" => surreal::Surrealdb::new(url).map(|d| Box::new(d) as Box<dyn Driver>),
         _ => bail!("Invalid URL: {}", url),
     }
 }
