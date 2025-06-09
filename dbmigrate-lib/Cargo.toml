@@ -4,7 +4,7 @@ version = "0.2.0"
 authors = ["Vincent Prouillet <github@vincentprouillet.com>"]
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
-description = "Library to run database migrations. Postgres, MySQL, Sqlite supported."
+description = "Library to run database migrations. Postgres, MySQL, Sqlite, SurrealDB supported."
 homepage = "https://github.com/Keats/dbmigrate"
 repository = "https://github.com/Keats/dbmigrate"
 keywords = ["database", "postgres", "migration", "sql", "mysql"]
@@ -18,6 +18,8 @@ postgres-native-tls = { version = "0.5.0", optional = true }
 postgres = { version = "0.19.0", optional = true }
 mysql = { version="12", optional = true}
 rusqlite = { version = "0.14.0", optional = true }
+surrealdb = { version = "2.2.2", optional = true }
+tokio = { version = "1.44.2", optional = true }
 error-chain = "0.11"
 
 [dev-dependencies]
@@ -28,3 +30,4 @@ default = ["postgres_support", "sqlite_support", "mysql_support"]
 postgres_support = ["postgres", "postgres-native-tls", "native-tls"]
 sqlite_support = ["rusqlite"]
 mysql_support = ["mysql"]
+surreal_support = ["surrealdb", "tokio"]
