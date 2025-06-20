@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
+use std::io::Write;
 use std::iter::repeat;
 use std::path::Path;
 
@@ -9,11 +10,11 @@ use crate::errors::{Result, ResultExt};
 use regex::Regex;
 
 /// A migration direction, can be Up or Down
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Direction {
-    /// Self-explanatory
+    /// Migration to apply changes
     Up,
-    /// Self-explanatory
+    /// Migration to rollback changes
     Down,
 }
 
@@ -26,135 +27,149 @@ impl ToString for Direction {
     }
 }
 
-/// A single direction migration file
+/// A migration represents a database change with up and optional down scripts
 #[derive(Debug)]
-pub struct MigrationFile {
-    /// Content of the file
-    pub content: Option<String>,
-    /// Direction
-    pub direction: Direction,
-    /// Number
-    pub number: i32,
-    /// Filename
-    pub filename: String,
-    /// Actual migration name (filename with number removed)
+pub struct Migration {
+    /// Content of the up migration
+    pub up: String,
+    /// Optional content of the down migration
+    pub down: Option<String>,
+    /// Migration number (must be positive)
+    pub number: u32,
+    /// Migration name
     pub name: String,
 }
 
-/// A migration has 2 files: one up and one down
-#[derive(Debug)]
-pub struct Migration {
-    /// The Up file
-    pub up: Option<MigrationFile>,
-    /// The Down file
-    pub down: Option<MigrationFile>,
-}
-
 /// Simple way to hold migrations indexed by their number
-pub type Migrations = BTreeMap<i32, Migration>;
+pub type Migrations = BTreeMap<u32, Migration>;
 
-impl MigrationFile {
-    /// Used when getting the info, therefore setting content to None at that point
-    fn new(filename: &str, name: &str, number: i32, direction: Direction) -> MigrationFile {
-        MigrationFile {
-            content: None,
-            filename: filename.to_owned(),
+impl Migration {
+    /// Creates a new migration
+    pub fn new(up: String, down: Option<String>, number: u32, name: String) -> Self {
+        Migration {
+            up,
+            down,
             number,
-            name: name.to_owned(),
-            direction,
+            name,
         }
+    }
+
+    /// Gets the filename for a specific direction
+    pub fn get_filename(&self, direction: Direction) -> String {
+        get_filename(&self.name, self.number, direction)
+    }
+
+    /// Writes the migration files to disk
+    pub fn write_to_disk(&self, path: &Path) -> Result<()> {
+        let filename_up = self.get_filename(Direction::Up);
+        let up_path = path.join(&filename_up);
+
+        let mut file =
+            File::create(&up_path).chain_err(|| format!("Failed to create {}", filename_up))?;
+        file.write_all(self.up.as_bytes())
+            .chain_err(|| format!("Failed to write content to {}", filename_up))?;
+
+        if let Some(down_content) = &self.down {
+            let filename_down = self.get_filename(Direction::Down);
+            let down_path = path.join(&filename_down);
+
+            let mut file = File::create(&down_path)
+                .chain_err(|| format!("Failed to create {}", filename_down))?;
+            file.write_all(down_content.as_bytes())
+                .chain_err(|| format!("Failed to write content to {}", filename_down))?;
+        }
+
+        Ok(())
     }
 }
 
-/// Creates 2 migration file: one up and one down
-pub fn create_migration(path: &Path, slug: &str, number: i32) -> Result<()> {
+/// Creates a new migration with empty content
+pub fn create_migration(path: &Path, slug: &str, number: u32) -> Result<()> {
     let fixed_slug = slug.replace(" ", "_");
-    let filename_up = get_filename(&fixed_slug, number, Direction::Up);
-    parse_filename(&filename_up)?;
-    let filename_down = get_filename(&fixed_slug, number, Direction::Down);
-    parse_filename(&filename_down)?;
 
-    println!("Creating {}", filename_up);
-    File::create(path.join(filename_up.clone()))
-        .chain_err(|| format!("Failed to create {}", filename_up))?;
-    println!("Creating {}", filename_down);
-    File::create(path.join(filename_down.clone()))
-        .chain_err(|| format!("Failed to create {}", filename_down))?;
+    let migration = Migration::new(String::new(), Some(String::new()), number, fixed_slug);
 
-    Ok(())
+    println!("Creating {}", migration.get_filename(Direction::Up));
+    println!("Creating {}", migration.get_filename(Direction::Down));
+
+    migration.write_to_disk(path)
 }
 
 /// Get the filename to use for a migration using the given data
-fn get_filename(slug: &str, number: i32, direction: Direction) -> String {
+fn get_filename(slug: &str, number: u32, direction: Direction) -> String {
     let num = number.to_string();
     let filler = repeat("0").take(4 - num.len()).collect::<String>();
     filler + &num + "." + slug + "." + &direction.to_string() + ".sql"
 }
 
+/// Information parsed from a migration filename
+struct FilenameInfo {
+    number: u32,
+    name: String,
+    direction: Direction,
+}
+
 /// Read the path given and read all the migration files, pairing them by migration
 /// number and checking for errors along the way
 pub fn read_migration_files(path: &Path) -> Result<Migrations> {
-    let mut btreemap: Migrations = BTreeMap::new();
+    let mut migrations: Migrations = BTreeMap::new();
+    let mut up_files = BTreeMap::new();
+    let mut down_files = BTreeMap::new();
 
     for entry in fs::read_dir(path).chain_err(|| format!("Failed to open {:?}", path))? {
         let entry = entry.unwrap();
-        // Will panic on invalid unicode in filename, unlikely (heh)
-        let info = match parse_filename(entry.file_name().to_str().unwrap()) {
+        let filename = entry.file_name().to_string_lossy().to_string();
+
+        let info = match parse_filename(&filename) {
             Ok(info) => info,
             Err(_) => continue,
         };
+
         let mut file =
             File::open(entry.path()).chain_err(|| format!("Failed to open {:?}", entry.path()))?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
 
-        let migration_file = MigrationFile {
-            content: Some(content),
-            ..info
-        };
-        let migration_number = migration_file.number;
-        let mut migration = match btreemap.remove(&migration_number) {
-            None => Migration {
-                up: None,
-                down: None,
-            },
-            Some(m) => m,
-        };
-        match migration_file.direction {
-            Direction::Up if migration.up.is_none() => {
-                migration.up = Some(migration_file);
+        match info.direction {
+            Direction::Up => {
+                up_files.insert(info.number, (info.name, content));
             }
-            Direction::Down if migration.down.is_none() => {
-                migration.down = Some(migration_file);
+            Direction::Down => {
+                down_files.insert(info.number, content);
             }
-            _ => {
-                bail!(
-                    "There are multiple migrations with number {}",
-                    migration_number
-                )
-            }
-        };
-
-        btreemap.insert(migration_number, migration);
+        }
     }
 
-    // Let's check the all the files we need now
-    let mut index = 1;
-    for (number, migration) in &btreemap {
-        if index != *number {
-            bail!("Files for migration {} are missing", index);
-        }
-        if migration.up.is_none() || migration.down.is_none() {
-            bail!("Migration {} is missing its up or down file", index);
-        }
-        index += 1;
+    for (number, (name, up_content)) in up_files {
+        let down_content = down_files.remove(&number);
+
+        let migration = Migration::new(up_content, down_content, number, name);
+
+        migrations.insert(number, migration);
     }
-    Ok(btreemap)
+
+    let mut expected_number = 1;
+    for number in migrations.keys() {
+        if *number != expected_number {
+            bail!("Files for migration {} are missing", expected_number);
+        }
+        expected_number += 1;
+    }
+
+    if !down_files.is_empty() {
+        let orphans: Vec<_> = down_files.keys().collect();
+        bail!(
+            "Found orphaned down migrations (no matching up file): {:?}",
+            orphans
+        );
+    }
+
+    Ok(migrations)
 }
 
 /// Gets a filename and check whether it's a valid format.
 /// If it is, grabs all the info from it
-fn parse_filename(filename: &str) -> Result<MigrationFile> {
+fn parse_filename(filename: &str) -> Result<FilenameInfo> {
     let re =
         Regex::new(r"^(?P<number>[0-9]{4})\.(?P<name>[_0-9a-zA-Z]*)\.(?P<direction>up|down)\.sql$")
             .unwrap();
@@ -169,31 +184,35 @@ fn parse_filename(filename: &str) -> Result<MigrationFile> {
         .name("number")
         .unwrap()
         .as_str()
-        .parse::<i32>()
+        .parse::<u32>()
         .unwrap();
-    let name = caps.name("name").unwrap().as_str();
+    let name = caps.name("name").unwrap().as_str().to_string();
     let direction = if caps.name("direction").unwrap().as_str() == "up" {
         Direction::Up
     } else {
         Direction::Down
     };
 
-    Ok(MigrationFile::new(filename, name, number, direction))
+    Ok(FilenameInfo {
+        number,
+        name,
+        direction,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Direction, get_filename, parse_filename, read_migration_files};
+    use super::{Direction, Migration, get_filename, parse_filename, read_migration_files};
     use std::fs::File;
     use std::io::prelude::*;
     use std::path::PathBuf;
     use tempdir::TempDir;
 
-    fn create_file(path: &PathBuf, filename: &str) {
+    fn create_file(path: &PathBuf, filename: &str, content: &str) {
         let mut new_path = path.clone();
         new_path.push(filename);
         let mut f = File::create(new_path.to_str().unwrap()).unwrap();
-        f.write_all(b"Hello, world!").unwrap();
+        f.write_all(content.as_bytes()).unwrap();
     }
 
     #[test]
@@ -218,66 +237,109 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_good_migrations_directory() {
-        let pathbuf = TempDir::new("migrations").unwrap().into_path();
-        create_file(&pathbuf, "0001.tests.up.sql");
-        create_file(&pathbuf, "0001.tests.down.sql");
-        create_file(&pathbuf, "0002.tests_second.up.sql");
-        create_file(&pathbuf, "0002.tests_second.down.sql");
-        let migrations = read_migration_files(pathbuf.as_path());
+    fn test_migration_filename() {
+        let migration = Migration::new(
+            "CREATE TABLE users;".to_string(),
+            Some("DROP TABLE users;".to_string()),
+            1,
+            "create_users".to_string(),
+        );
 
-        assert_eq!(migrations.is_ok(), true);
+        assert_eq!(
+            migration.get_filename(Direction::Up),
+            "0001.create_users.up.sql"
+        );
+        assert_eq!(
+            migration.get_filename(Direction::Down),
+            "0001.create_users.down.sql"
+        );
     }
 
     #[test]
-    fn test_parse_missing_migrations_directory() {
+    fn test_parse_good_migrations_directory() {
         let pathbuf = TempDir::new("migrations").unwrap().into_path();
-        create_file(&pathbuf, "0001.tests.up.sql");
-        create_file(&pathbuf, "0001.tests.down.sql");
-        create_file(&pathbuf, "0002.tests_second.up.sql");
-        let migrations = read_migration_files(pathbuf.as_path());
+        create_file(&pathbuf, "0001.tests.up.sql", "CREATE TABLE tests;");
+        create_file(&pathbuf, "0001.tests.down.sql", "DROP TABLE tests;");
+        create_file(&pathbuf, "0002.tests_second.up.sql", "ALTER TABLE tests;");
+        create_file(&pathbuf, "0002.tests_second.down.sql", "-- Revert ALTER");
 
-        assert_eq!(migrations.is_err(), true);
+        let migrations = read_migration_files(pathbuf.as_path()).unwrap();
+
+        assert_eq!(migrations.len(), 2);
+
+        let first = migrations.get(&1).unwrap();
+        assert_eq!(first.number, 1);
+        assert_eq!(first.name, "tests");
+        assert_eq!(first.up, "CREATE TABLE tests;");
+        assert_eq!(first.down, Some("DROP TABLE tests;".to_string()));
+
+        let second = migrations.get(&2).unwrap();
+        assert_eq!(second.number, 2);
+        assert_eq!(second.name, "tests_second");
+        assert_eq!(second.up, "ALTER TABLE tests;");
+        assert_eq!(second.down, Some("-- Revert ALTER".to_string()));
+    }
+
+    #[test]
+    fn test_migration_with_only_up() {
+        let pathbuf = TempDir::new("migrations").unwrap().into_path();
+        create_file(&pathbuf, "0001.tests.up.sql", "CREATE TABLE tests;");
+
+        let migrations = read_migration_files(pathbuf.as_path()).unwrap();
+        assert_eq!(migrations.len(), 1);
+
+        let first = migrations.get(&1).unwrap();
+        assert_eq!(first.number, 1);
+        assert_eq!(first.name, "tests");
+        assert_eq!(first.up, "CREATE TABLE tests;");
+        assert_eq!(first.down, None);
     }
 
     #[test]
     fn test_parse_skipping_migrations_directory() {
         let pathbuf = TempDir::new("migrations").unwrap().into_path();
-        create_file(&pathbuf, "0001.tests.up.sql");
-        create_file(&pathbuf, "0001.tests.down.sql");
-        create_file(&pathbuf, "0003.tests_second.up.sql");
-        create_file(&pathbuf, "0003.tests_second.down.sql");
-        let migrations = read_migration_files(pathbuf.as_path());
+        create_file(&pathbuf, "0001.tests.up.sql", "CREATE TABLE tests;");
+        create_file(&pathbuf, "0001.tests.down.sql", "DROP TABLE tests;");
+        create_file(&pathbuf, "0003.tests_second.up.sql", "ALTER TABLE tests;");
+        create_file(&pathbuf, "0003.tests_second.down.sql", "-- Revert ALTER");
 
-        assert_eq!(migrations.is_err(), true);
+        let migrations = read_migration_files(pathbuf.as_path());
+        assert!(migrations.is_err());
     }
 
     #[test]
-    fn test_two_migrations_same_number() {
-        let tests: &[&[&str]] = &[
-            // Extra up migration
-            &["0001.a.up.sql", "0001.a.down.sql", "0001.b.up.sql"],
-            // Extra down migration
-            &["0001.a.up.sql", "0001.a.down.sql", "0001.b.down.sql"],
-            // Extra up and down migrations
-            &[
-                "0001.a.up.sql",
-                "0001.a.down.sql",
-                "0001.b.up.sql",
-                "0001.b.down.sql",
-            ],
-        ];
+    fn test_orphaned_down_migration() {
+        let pathbuf = TempDir::new("migrations").unwrap().into_path();
+        create_file(&pathbuf, "0001.tests.up.sql", "CREATE TABLE tests;");
+        create_file(&pathbuf, "0001.tests.down.sql", "DROP TABLE tests;");
+        create_file(&pathbuf, "0002.orphaned.down.sql", "Something wrong");
 
-        for files in tests {
-            let pathbuf = TempDir::new("migrations").unwrap().into_path();
+        let migrations = read_migration_files(pathbuf.as_path());
+        assert!(migrations.is_err());
+    }
 
-            for file in files.iter() {
-                create_file(&pathbuf, file);
-            }
+    #[test]
+    fn test_create_and_write_migration() {
+        let dir = TempDir::new("migrations").unwrap();
+        let path = dir.path();
 
-            let migrations = read_migration_files(pathbuf.as_path());
+        let migration = Migration::new(
+            "CREATE TABLE users;".to_string(),
+            Some("DROP TABLE users;".to_string()),
+            1,
+            "create_users".to_string(),
+        );
 
-            assert_eq!(migrations.is_err(), true);
-        }
+        migration.write_to_disk(path).unwrap();
+
+        let mut up_file = File::open(path.join("0001.create_users.up.sql")).unwrap();
+        let mut up_content = String::new();
+        up_file.read_to_string(&mut up_content).unwrap();
+        assert_eq!(up_content, "CREATE TABLE users;");
+
+        let mut down_file = File::open(path.join("0001.create_users.down.sql")).unwrap();
+        let mut down_content = String::new();
+        down_file.read_to_string(&mut down_content).unwrap();
+        assert_eq!(down_content, "DROP TABLE users;");
     }
 }

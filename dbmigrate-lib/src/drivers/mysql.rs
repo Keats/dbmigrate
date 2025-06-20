@@ -40,7 +40,7 @@ impl Driver for Mysql {
             .unwrap();
     }
 
-    fn get_current_number(&mut self) -> i32 {
+    fn get_current_number(&mut self) -> u32 {
         let mut result = self
             .pool
             .prep_exec(
@@ -52,10 +52,10 @@ impl Driver for Mysql {
             .unwrap();
         // That is quite ugly
         let row = result.next().unwrap();
-        from_row::<i32>(row.unwrap())
+        from_row::<u32>(row.unwrap())
     }
 
-    fn set_current_number(&mut self, number: i32) {
+    fn set_current_number(&mut self, number: u32) {
         self.pool
             .prep_exec(
                 "UPDATE __dbmigrate_table SET current = ? WHERE id = 1;",
@@ -64,7 +64,7 @@ impl Driver for Mysql {
             .unwrap();
     }
 
-    fn migrate(&mut self, migration: String, number: i32) -> Result<()> {
+    fn migrate(&mut self, migration: String, number: u32) -> Result<()> {
         let mut conn = self.pool.get_conn()?;
         conn.query(migration).chain_err(|| "Migration failed")?;
         self.set_current_number(number);

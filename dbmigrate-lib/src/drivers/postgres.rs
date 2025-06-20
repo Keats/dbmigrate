@@ -50,7 +50,7 @@ impl Driver for Postgres {
             .unwrap();
     }
 
-    fn get_current_number(&mut self) -> i32 {
+    fn get_current_number(&mut self) -> u32 {
         let stmt = self
             .client
             .prepare(
@@ -63,7 +63,7 @@ impl Driver for Postgres {
         results.first().unwrap().get("current")
     }
 
-    fn set_current_number(&mut self, number: i32) {
+    fn set_current_number(&mut self, number: u32) {
         let stmt = self
             .client
             .prepare("UPDATE __dbmigrate_table SET current = $1 WHERE id = 1;")
@@ -71,7 +71,7 @@ impl Driver for Postgres {
         self.client.execute(&stmt, &[&number]).unwrap();
     }
 
-    fn migrate(&mut self, migration: String, number: i32) -> Result<()> {
+    fn migrate(&mut self, migration: String, number: u32) -> Result<()> {
         self.client
             .simple_query(&migration)
             .chain_err(|| "Migration failed")?;

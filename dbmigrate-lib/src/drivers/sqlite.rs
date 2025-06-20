@@ -40,7 +40,7 @@ impl Driver for Sqlite {
             .unwrap();
     }
 
-    fn get_current_number(&mut self) -> i32 {
+    fn get_current_number(&mut self) -> u32 {
         self.conn
             .query_row(
                 "
@@ -52,7 +52,7 @@ impl Driver for Sqlite {
             .unwrap()
     }
 
-    fn set_current_number(&mut self, number: i32) {
+    fn set_current_number(&mut self, number: u32) {
         let mut stmt = self
             .conn
             .prepare("UPDATE __dbmigrate_table SET current = ? WHERE id = 1;")
@@ -60,7 +60,7 @@ impl Driver for Sqlite {
         stmt.execute(&[&number]).unwrap();
     }
 
-    fn migrate(&mut self, migration: String, number: i32) -> Result<()> {
+    fn migrate(&mut self, migration: String, number: u32) -> Result<()> {
         self.conn
             .execute_batch(&migration)
             .chain_err(|| "Migration failed")?;

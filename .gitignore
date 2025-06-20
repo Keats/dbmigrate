@@ -3,3 +3,4 @@ Cargo.lock
 /tags
 .idea
 dbmigrate.db
+.DS_Store

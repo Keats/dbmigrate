@@ -104,7 +104,7 @@ impl Driver for Surrealdb {
         });
     }
 
-    fn get_current_number(&mut self) -> i32 {
+    fn get_current_number(&mut self) -> u32 {
         self.runtime.block_on(async {
             let query = r#"
                 let $record = SELECT current FROM ONLY __dbmigrate_table:1;
@@ -112,13 +112,13 @@ impl Driver for Surrealdb {
             "#;
             let mut result = self.client.query(query).await.unwrap();
 
-            let current = result.take::<Option<i32>>(1).unwrap();
+            let current = result.take::<Option<u32>>(1).unwrap();
 
             current.unwrap_or(0)
         })
     }
 
-    fn set_current_number(&mut self, number: i32) {
+    fn set_current_number(&mut self, number: u32) {
         self.runtime.block_on(async {
             let query = "UPDATE __dbmigrate_table:1 SET current = $number;";
             self.client
@@ -129,7 +129,7 @@ impl Driver for Surrealdb {
         });
     }
 
-    fn migrate(&mut self, migration: String, number: i32) -> Result<()> {
+    fn migrate(&mut self, migration: String, number: u32) -> Result<()> {
         self.runtime.block_on(async {
             self.client
                 .query(&migration)
