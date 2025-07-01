@@ -21,12 +21,12 @@ pub trait Driver {
     /// A fn that will delete migration table
     fn remove_migration_table(&mut self);
     /// Get the current migration number from the database
-    fn get_current_number(&mut self) -> i32;
+    fn get_current_number(&mut self) -> u32;
     /// Set the current migration number in the database
-    fn set_current_number(&mut self, number: i32);
+    fn set_current_number(&mut self, number: u32);
     /// Perform the `migration` content on the database and set
     /// the migration number to be the `number` given
-    fn migrate(&mut self, migration: String, number: i32) -> Result<()>;
+    fn migrate(&mut self, migration: String, number: u32) -> Result<()>;
 }
 
 /// Returns a driver instance depending on url

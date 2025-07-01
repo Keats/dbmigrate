@@ -37,6 +37,4 @@ pub use drivers::postgres::Postgres as PostgresDriver;
 pub use drivers::sqlite::Sqlite as SqliteDriver;
 pub use drivers::{Driver, get_driver};
 
-pub use files::{
-    Direction, Migration, MigrationFile, Migrations, create_migration, read_migration_files,
-};
+pub use files::{Direction, Migration, Migrations, create_migration, read_migration_files};

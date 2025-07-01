@@ -7,24 +7,30 @@ use print;
 
 // Does the whole migration thingy, along with timing and handling errors
 macro_rules! migrate {
-    ($driver: ident, $mig_file: ident) => {
+    ($driver: ident, $migration_file: ident, $direction: expr) => {
         println!(
             "Running {} migration #{}: {}",
-            $mig_file.direction.to_string(),
-            $mig_file.number,
-            $mig_file.name
+            $direction.to_string(),
+            $migration_file.number,
+            $migration_file.name
         );
         let res = {
             let start = Instant::now();
 
-            match $driver.migrate(
-                $mig_file.content.clone().unwrap(),
-                if $mig_file.direction == Direction::Up {
-                    $mig_file.number
-                } else {
-                    $mig_file.number - 1
-                },
-            ) {
+            let content = match $direction {
+                Direction::Up => $migration_file.up.clone(),
+                Direction::Down => $migration_file
+                    .down
+                    .clone()
+                    .expect("Down migration content missing"),
+            };
+            let index = if $direction == Direction::Up {
+                $migration_file.number
+            } else {
+                ($migration_file.number - 1)
+            };
+
+            match $driver.migrate(content, index) {
                 Err(e) => Err(e),
                 Ok(_) => {
                     let duration = start.elapsed();
@@ -40,7 +46,7 @@ macro_rules! migrate {
 }
 
 pub fn create(migration_files: &Migrations, path: &Path, slug: &str) -> Result<()> {
-    let current_number = migration_files.keys().cloned().max().unwrap_or(0i32);
+    let current_number = migration_files.keys().cloned().max().unwrap_or(0u32);
     let number = current_number + 1;
     match create_migration(path, slug, number) {
         Err(e) => Err(e.into()),
@@ -52,49 +58,47 @@ pub fn create(migration_files: &Migrations, path: &Path, slug: &str) -> Result<(
 }
 
 pub fn status(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
-    let current = driver.get_current_number();
+    let current = driver.get_current_number().max(0);
     if current == 0 {
         print::success("No migration has been ran");
     }
-    for (number, migration) in migration_files.iter() {
-        let mig_file = migration.up.as_ref().unwrap();
-        if number == &current {
+    for migration in migration_files.values() {
+        if migration.number == current {
             print::success(&format!(
                 "{} - {} (current)",
-                mig_file.number, mig_file.name
+                migration.number, migration.name
             ));
         } else {
-            println!("{} - {}", mig_file.number, mig_file.name);
+            println!("{} - {}", migration.number, migration.name);
         }
     }
     Ok(())
 }
 
 pub fn up(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
-    let current = driver.get_current_number();
-    let max = migration_files.keys().max().unwrap();
-    if current == *max {
+    let current = driver.get_current_number().max(0);
+    let max = migration_files.keys().cloned().max().unwrap_or(0);
+    if current == max {
         print::success("Migrations are up-to-date");
         return Ok(());
     }
 
-    for (number, migration) in migration_files.iter() {
-        if number > &current {
-            let mig_file = migration.up.as_ref().unwrap();
-            migrate!(driver, mig_file);
+    for migration in migration_files.values() {
+        if migration.number > current {
+            migrate!(driver, migration, Direction::Up);
         }
     }
     Ok(())
 }
 
 pub fn down(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
-    let current = driver.get_current_number();
+    let current = driver.get_current_number().max(0);
     if current == 0 {
         print::success("No down migrations to run");
         return Ok(());
     }
 
-    let mut numbers: Vec<i32> = migration_files
+    let mut numbers: Vec<u32> = migration_files
         .keys()
         .cloned()
         .filter(|i| i <= &current)
@@ -102,38 +106,33 @@ pub fn down(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result
     numbers.sort_by(|a, b| b.cmp(a));
 
     for number in numbers {
-        let migration = migration_files.get(&number).unwrap();
-        let mig_file = migration.down.as_ref().unwrap();
-        migrate!(driver, mig_file);
+        let migration = &migration_files[&number];
+        migrate!(driver, migration, Direction::Down);
     }
     Ok(())
 }
 
 pub fn redo(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
-    let current = driver.get_current_number();
+    let current = driver.get_current_number().max(0);
     if current == 0 {
         print::success("No migration to redo");
         return Ok(());
     }
-    let migration = migration_files.get(&current).unwrap();
+    let migration = &migration_files[&current];
 
-    let down_file = migration.down.as_ref().unwrap();
-    let up_file = migration.up.as_ref().unwrap();
-
-    migrate!(driver, down_file);
-    migrate!(driver, up_file);
+    migrate!(driver, migration, Direction::Down);
+    migrate!(driver, migration, Direction::Up);
     Ok(())
 }
 
 pub fn revert(mut driver: Box<dyn Driver>, migration_files: &Migrations) -> Result<()> {
-    let current = driver.get_current_number();
+    let current = driver.get_current_number().max(0);
     if current == 0 {
         print::success("No migration to revert");
         return Ok(());
     }
-    let migration = migration_files.get(&current).unwrap();
-    let down_file = migration.down.as_ref().unwrap();
+    let migration = &migration_files[&current];
 
-    migrate!(driver, down_file);
+    migrate!(driver, migration, Direction::Down);
     Ok(())
 }
